@@ -3,8 +3,8 @@
 #include <iostream>
 #include <vector>
 
-#include "board.hpp"
-#include "player_game.hpp"
+#include "connect4/board.hpp"
+#include "connect4/ui/player_game.hpp"
 #include "randagent.hpp"
 
 int main() {
@@ -40,7 +40,7 @@ int main() {
                 break;
             }
         } else {
-            std::vector<int> move = agent.chooseMove(brd, boardSize);
+            std::vector<int> move = agent.chooseMove(brd);
             brd.addDrop(move, agentToken);
             std::cout << "Agent played column " << move[0] << ".\n";
 

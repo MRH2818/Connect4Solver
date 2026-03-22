@@ -3,7 +3,7 @@
 #include <limits>
 #include <string>
 
-#include "board.hpp"
+#include "connect4/board.hpp"
 
 // Renders the 2D board; lowest row (gravity bottom) is printed last before the column labels.
 inline void printBoard2D(const Board& brd, int size) {

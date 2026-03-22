@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <vector>
 
-#include "agent.hpp"
+#include "connect4/agent.hpp"
 
 // Picks a legal drop by random trial
 class RandomAgent : public Agent {
@@ -10,8 +10,7 @@ public:
     RandomAgent(char playerToken, int playerNumber, std::vector<char> nextPlayers)
         : Agent(playerToken, playerNumber, nextPlayers) {}
 
-    std::vector<int> chooseMove(const Board& board, int boardSize) override {
-        (void)boardSize;
+    std::vector<int> chooseMove(const Board& board) override {
         const int dims = board.getDimensions() - 1;
         while (true) {
             std::vector<int> move;
@@ -26,4 +25,3 @@ public:
         }
     }
 };
-
