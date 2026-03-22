@@ -6,7 +6,6 @@
 #include <iostream>
 
 const char EMPTY_CHAR = '_';
-
 namespace BoardUtils {
     int ipow(int a, int b) {
         if (b < 0) {
@@ -172,12 +171,10 @@ class Board {
         }
         return false;
     }
-
     
     std::vector<char> getBoard() {
         return board;
     }
-
     std::string toString() const {
         return std::string(board.begin(), board.end());
     }
@@ -188,5 +185,3 @@ class Board {
         return std::all_of(board.begin(), board.end(), [](char c) { return c == EMPTY_CHAR; });
     }
 };
-
-
