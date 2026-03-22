@@ -64,6 +64,7 @@ private:
     int size;
     int dimensions;
     std::vector<std::vector<int>> _directions;
+    std::vector<std::vector<int>> availableToPlay;
 
     int lastPlacedIndex;
     std::vector<int> lastPlacedCoords;
@@ -75,14 +76,17 @@ public:
             std::cout << "Dimensions must be at least 2\n";
             exit(5);
         }
-        this->board = std::vector<char>(BoardUtils::ipow(size, dimensions), EMPTY_CHAR);
+        int sizepowdim_m1 = BoardUtils::ipow(size, dimensions-1);
+        this->board = std::vector<char>(sizepowdim_m1*size, EMPTY_CHAR);
         this->size = size;
         this->dimensions = dimensions;
         this->_directions = BoardUtils::getAllDirections(dimensions);
 
-        // for (uint8_t i = 0; i < board.size(); i++) {
-        //     board[i] = i;
-        // }
+        std::vector<int> upToSize(size, 0);
+        for (int i = 0; i < size; i++) {
+            upToSize[i] = i;
+        }
+        this->availableToPlay = std::vector<std::vector<int>>(sizepowdim_m1, upToSize);
     }
     // Ensure that length_of_string is equal to size^dimensions. This constructor will not check.
     Board(const char* str, int size, int dimensions, size_t length_of_string, bool placedYet=true) {
@@ -126,13 +130,18 @@ public:
         if (!_placedYet) return false;
         for (const std::vector<int>& d : this->_directions) {
             int step = this->coordsToIndex(d);
-            int f_steps = this->size, b_steps = size;
+            // Max cells in the +d and -d rays while coords stay in [0, size).
+            // (Previously b_steps ignored axes where d[i]==1, so index arithmetic
+            // wrapped across edges and reported false wins.)
+            int f_steps = this->size;
+            int b_steps = this->size;
             for (int i = 0; i < dimensions; i++) {
                 if (d[i] == 1) {
                     f_steps = std::min(f_steps, size - this->lastPlacedCoords[i]);
-                }
-                else if (d[i] == -1) {
                     b_steps = std::min(b_steps, this->lastPlacedCoords[i] + 1);
+                } else if (d[i] == -1) {
+                    f_steps = std::min(f_steps, this->lastPlacedCoords[i] + 1);
+                    b_steps = std::min(b_steps, size - this->lastPlacedCoords[i]);
                 }
             }
 
@@ -156,29 +165,29 @@ public:
         return false;
     }
 
-    // Returns currentIndex if move is valid, -1 if it isn't:
-    bool isValid(const std::vector<int>& coords) const {
-        if (coords.size() != dimensions-1) {
-            std::cout << "Given coordinate size must equal exactly " << dimensions-1 << " dimensions.\n";
-            exit(3);
-        }
+    // // Returns currentIndex if move is valid, -1 if it isn't:
+    // bool isValid(const std::vector<int>& coords) const {
+    //     if (coords.size() != dimensions-1) {
+    //         std::cout << "Given coordinate size must equal exactly " << dimensions-1 << " dimensions.\n";
+    //         exit(3);
+    //     }
 
-        // 1. Find the base index of this "stack"
-        // For coords = (1, 2), create baseCoords = (1, 0, 2)
-        std::vector<int> baseCoords = { coords[0] };
-        baseCoords.push_back(0); // gravity axis at index 1 set to 0
-        baseCoords.insert(baseCoords.end(), coords.begin() + 1, coords.end());
-        int currentIndex = coordsToIndex(baseCoords);
+    //     // 1. Find the base index of this "stack"
+    //     // For coords = (1, 2), create baseCoords = (1, 0, 2)
+    //     std::vector<int> baseCoords = { coords[0] };
+    //     baseCoords.push_back(0); // gravity axis at index 1 set to 0
+    //     baseCoords.insert(baseCoords.end(), coords.begin() + 1, coords.end());
+    //     int currentIndex = coordsToIndex(baseCoords);
 
-        // 3. Scan "upward" through the gravity axis
-        for (int h = 0; h < size; ++h) {
-            if (board[currentIndex] == EMPTY_CHAR) {
-                return currentIndex;
-            }
-            currentIndex += this->size; // 2. The jump offset for the 2nd dimension is always 'size'
-        }
-        return -1;
-    }
+    //     // 3. Scan "upward" through the gravity axis
+    //     for (int h = 0; h < size; ++h) {
+    //         if (board[currentIndex] == EMPTY_CHAR) {
+    //             return currentIndex;
+    //         }
+    //         currentIndex += this->size; // 2. The jump offset for the 2nd dimension is always 'size'
+    //     }
+    //     return -1;
+    // }
 
     // Returns true if given coordinate is in the board.
     bool isInBoard(const std::vector<int>& coord) const {
