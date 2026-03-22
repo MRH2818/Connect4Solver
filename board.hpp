@@ -140,6 +140,31 @@ public:
         return false;
     }
 
+    // Returns currentIndex if move is valid, -1 if it isn't:
+    bool isValid(const std::vector<int>& coords) const {
+        if (coords.size() != dimensions-1) {
+            std::cout << "Given coordinate size must equal exactly " << dimensions-1 << " dimensions.\n";
+            exit(3);
+        }
+
+        // 1. Find the base index of this "stack"
+        // For coords = (1, 2), create baseCoords = (1, 0, 2)
+        std::vector<int> baseCoords = { coords[0] };
+        baseCoords.push_back(0); // gravity axis at index 1 set to 0
+        baseCoords.insert(baseCoords.end(), coords.begin() + 1, coords.end());
+        int currentIndex = coordsToIndex(baseCoords);
+
+        // 3. Scan "upward" through the gravity axis
+        for (int h = 0; h < size; ++h) {
+            if (board[currentIndex] == EMPTY_CHAR) {
+                return currentIndex;
+            }
+            currentIndex += this->size; // 2. The jump offset for the 2nd dimension is always 'size'
+        }
+        return -1;
+    }
+
+
     // Add drop. Piece falls along 2nd dimension. Returns false if dimension is full.
     bool addDrop(const std::vector<int>& coords, char player) {
         if (coords.size() != dimensions-1) {
