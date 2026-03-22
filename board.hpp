@@ -56,7 +56,6 @@ class Board {
             std::cout << "Dimensions must be at least 2\n";
             exit(5);
         }
-        
         this->board = std::vector<char>(BoardUtils::ipow(size, dimensions), EMPTY_CHAR);
         this->size = size;
         this->dimensions = dimensions;
@@ -65,6 +64,17 @@ class Board {
         // for (uint8_t i = 0; i < board.size(); i++) {
         //     board[i] = i;
         // }
+    }
+
+    Board(const char* str, int size, int dimensions) {
+        if (dimensions < 2) {
+            std::cout << "Dimensions must be at least 2.\n";
+            exit(5);
+        }
+        this->board = std::vector<char>(str, str + strlen(str));
+        this->size = size;
+        this->dimensions = dimensions;
+        this->directions = BoardUtils::getAllDirections(dimensions);
     }
     
     std::vector<int> indexToCoords(int index) const {
@@ -78,7 +88,7 @@ class Board {
 
     int coordsToIndex(const std::vector<int>& coords) const {
         if (coords.size() != this->dimensions) {
-            std::cout << "Given coordinate size must equal number of dimensions";
+            std::cout << "Given coordinate size must equal number of dimensions.\n";
             exit(4);
         }
 
@@ -129,7 +139,7 @@ class Board {
     // Add drop. Piece falls along 2nd dimension. Returns false if dimension is full
     bool addDrop(const std::vector<int>& coords, char player) {
         if (coords.size() != dimensions-1) {
-            std::cout << "Given coordinate size must equal number of dimensions-1";
+            std::cout << "Given coordinate size must equal exactly " << dimensions-1 << " dimensions.\n";
             exit(3);
         }
 
