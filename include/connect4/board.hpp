@@ -64,11 +64,17 @@ private:
     int size;
     int dimensions;
     std::vector<std::vector<int>> _directions;
-    std::vector<std::vector<int>> availableToPlay;
+    // One slot per drop move (size^(dimensions-1)); true while that column still accepts a piece.
+    std::vector<bool> availableToPlay;
 
     int lastPlacedIndex;
     std::vector<int> lastPlacedCoords;
     bool _placedYet = false;
+
+    // Sets availableToPlay to numMoves entries, all true.
+    void initAvailableToPlay(int numMoves) {
+        availableToPlay.assign(static_cast<size_t>(numMoves), true);
+    }
 
 public:
     Board(int size, int dimensions=2) {
@@ -81,12 +87,7 @@ public:
         this->size = size;
         this->dimensions = dimensions;
         this->_directions = BoardUtils::getAllDirections(dimensions);
-
-        std::vector<int> upToSize(size, 0);
-        for (int i = 0; i < size; i++) {
-            upToSize[i] = i;
-        }
-        this->availableToPlay = std::vector<std::vector<int>>(sizepowdim_m1, upToSize);
+        initAvailableToPlay(sizepowdim_m1);
     }
     // Ensure that length_of_string is equal to size^dimensions. This constructor will not check.
     Board(const char* str, int size, int dimensions, size_t length_of_string, bool placedYet=true) {
@@ -97,8 +98,9 @@ public:
         this->board = std::vector<char>(str, str + length_of_string);
         this->size = size;
         this->dimensions = dimensions;
-        this->_directions = BoardUtils::getAllDirections(dimensions);
         this->_placedYet = placedYet;
+        this->_directions = BoardUtils::getAllDirections(dimensions);
+        initAvailableToPlay(BoardUtils::ipow(size, dimensions - 1));
     }
     
     std::vector<int> indexToCoords(int index) const {
@@ -123,6 +125,36 @@ public:
             mul *= this->size;
         }
         return index;
+    }
+
+    // Encodes an addDrop coordinate vector into [0, size^(dimensions-1)).
+    int dropMoveIndex(const std::vector<int>& coords) const {
+        if (coords.size() != dimensions - 1) {
+            std::cout << "Given coordinate size must equal exactly " << dimensions - 1 << " dimensions.\n";
+            exit(3);
+        }
+        int index = 0;
+        int mul = 1;
+        for (int i = 0; i < dimensions - 1; ++i) {
+            index += coords[i] * mul;
+            mul *= size;
+        }
+        return index;
+    }
+
+    // Inverse of dropMoveIndex; index must be in [0, size^(dimensions-1)).
+    std::vector<int> dropMoveCoords(int index) const {
+        if (index < 0 || index >= availableToPlay.size()) {
+            std::cout << "dropMoveCoords: index out of range.\n";
+            exit(3);
+        }
+        std::vector<int> coords(dimensions - 1);
+        int temp = index;
+        for (int i = 0; i < dimensions - 1; ++i) {
+            coords[i] = temp % size;
+            temp /= size;
+        }
+        return coords;
     }
 
     // last coords MUST match the lastPlacedIndex . This function will not check.
@@ -165,30 +197,6 @@ public:
         return false;
     }
 
-    // // Returns currentIndex if move is valid, -1 if it isn't:
-    // bool isValid(const std::vector<int>& coords) const {
-    //     if (coords.size() != dimensions-1) {
-    //         std::cout << "Given coordinate size must equal exactly " << dimensions-1 << " dimensions.\n";
-    //         exit(3);
-    //     }
-
-    //     // 1. Find the base index of this "stack"
-    //     // For coords = (1, 2), create baseCoords = (1, 0, 2)
-    //     std::vector<int> baseCoords = { coords[0] };
-    //     baseCoords.push_back(0); // gravity axis at index 1 set to 0
-    //     baseCoords.insert(baseCoords.end(), coords.begin() + 1, coords.end());
-    //     int currentIndex = coordsToIndex(baseCoords);
-
-    //     // 3. Scan "upward" through the gravity axis
-    //     for (int h = 0; h < size; ++h) {
-    //         if (board[currentIndex] == EMPTY_CHAR) {
-    //             return currentIndex;
-    //         }
-    //         currentIndex += this->size; // 2. The jump offset for the 2nd dimension is always 'size'
-    //     }
-    //     return -1;
-    // }
-
     // Returns true if given coordinate is in the board.
     bool isInBoard(const std::vector<int>& coord) const {
         if (coord.size() != this->dimensions) return false;
@@ -224,13 +232,26 @@ public:
                 this->lastPlacedCoords = baseCoords;
                 this->_placedYet = true;
 
+                if (h+1 == size) {
+                    availableToPlay[dropMoveIndex(coords)] = false;
+                }
+
                 return true;
             }
             currentIndex += this->size; // 2. The jump offset for the 2nd dimension is always 'size'
         }
         return false;
     }
-    
+    // Drop moves whose column is not full (see availableToPlay).
+    std::vector<std::vector<int>> getAvailableMoves() const {
+        std::vector<std::vector<int>> moves(availableToPlay.size());
+        for (int m = 0; m < availableToPlay.size(); ++m) {
+            if (availableToPlay[m]) {
+                moves[m] = dropMoveCoords(m);
+            }
+        }
+        return moves;
+    }
     auto getDimensions() const {
         return this->dimensions;
     }
