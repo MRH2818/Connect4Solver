@@ -43,7 +43,7 @@ namespace BoardUtils {
 }
 
 class Board {
-    private:
+private:
     std::vector<char> board;
     int size;
     int dimensions;
@@ -53,7 +53,7 @@ class Board {
     std::vector<int> lastPlacedCoords;
     bool _placedYet = false;
 
-    public:
+public:
     Board(int size, int dimensions=2) {
         if (dimensions < 2) {
             std::cout << "Dimensions must be at least 2\n";
