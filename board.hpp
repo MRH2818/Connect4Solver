@@ -164,7 +164,6 @@ public:
         return -1;
     }
 
-
     // Add drop. Piece falls along 2nd dimension. Returns false if dimension is full.
     bool addDrop(const std::vector<int>& coords, char player) {
         if (coords.size() != dimensions-1) {
