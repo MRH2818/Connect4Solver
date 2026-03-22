@@ -172,6 +172,12 @@ public:
         return false;
     }
     
+    auto getDimensions() const {
+        return this->dimensions;
+    }
+    auto getSize() const {
+        return this->size;
+    }
     std::vector<char> getBoard() const {
         return board;
     }
