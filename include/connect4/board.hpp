@@ -231,6 +231,9 @@ public:
     std::vector<char> getBoard() const {
         return board;
     }
+    char getCell(int index) const {
+        return board[index];
+    }
     std::string toString() const {
         return std::string(board.begin(), board.end());
     }
