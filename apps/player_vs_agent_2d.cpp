@@ -21,6 +21,8 @@ int main() {
     std::cout << "You: " << humanToken << ", Agent: " << agentToken << "\n\n";
 
     int turn = 0;
+    int lastMove = -1;
+
     while (true) {
         printBoard2D(brd, boardSize);
 
@@ -39,8 +41,9 @@ int main() {
                 std::cout << "You win!\n";
                 break;
             }
+            lastMove = col;
         } else {
-            std::vector<int> move = agent.chooseMove(brd);
+            std::vector<int> move = agent.chooseMove(brd, {lastMove}, lastMove==-1);
             brd.addDrop(move, agentToken);
             std::cout << "Agent played column " << move[0] << ".\n";
 
@@ -49,6 +52,8 @@ int main() {
                 std::cout << "Agent wins!\n";
                 break;
             }
+
+            lastMove = move[0];
         }
 
         if (brd.isFull()) {

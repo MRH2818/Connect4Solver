@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "connect4/board.hpp"
+
 using namespace std;
 
 // Represents a human-style player: token identity and stdin column choice (see main.cpp loop).
@@ -20,6 +21,6 @@ public:
     }
     Agent(char playerToken, int playerNumber, vector<char> nextPlayers) : token(playerToken), playerNumber(playerNumber), nextPlayers(nextPlayers) {}
 
-    virtual vector<int> chooseMove(const Board& board) = 0; // Must be overridden
+    virtual vector<int> chooseMove(const Board& board, const vector<int>& oppLastMove, bool firstMove=false) = 0; // Must be overridden
 };
 

@@ -10,7 +10,9 @@ public:
     RandomAgent(char playerToken, int playerNumber, std::vector<char> nextPlayers)
         : Agent(playerToken, playerNumber, nextPlayers) {}
 
-    std::vector<int> chooseMove(const Board& board) override {
+    std::vector<int> chooseMove(const Board& board, const std::vector<int>& oppLastMove, bool firstMove=false) override {
+        (void)oppLastMove;
+        (void)firstMove;
         const int dims = board.getDimensions() - 1;
         while (true) {
             std::vector<int> move;
