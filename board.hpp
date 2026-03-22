@@ -50,6 +50,10 @@ class Board {
     int dimensions;
     std::vector<std::vector<int>> directions;
 
+    int lastPlacedIndex;
+    std::vector<int> lastPlacedCoords;
+    bool _placedYet = false;
+
     public:
     Board(int size, int dimensions=2) {
         if (dimensions < 2) {
@@ -65,16 +69,17 @@ class Board {
         //     board[i] = i;
         // }
     }
-
-    Board(const char* str, int size, int dimensions) {
+    // Ensure that length_of_string is equal to size^dimensions. This constructor will not check.
+    Board(const char* str, int size, int dimensions, size_t length_of_string, bool placedYet=true) {
         if (dimensions < 2) {
             std::cout << "Dimensions must be at least 2.\n";
             exit(5);
         }
-        this->board = std::vector<char>(str, str + strlen(str));
+        this->board = std::vector<char>(str, str + length_of_string);
         this->size = size;
         this->dimensions = dimensions;
         this->directions = BoardUtils::getAllDirections(dimensions);
+        this->_placedYet = placedYet;
     }
     
     std::vector<int> indexToCoords(int index) const {
@@ -102,21 +107,21 @@ class Board {
     }
 
     // last coords MUST match the lastPlacedIndex . This function will not check.
-    bool checkWin(char player, int lastPlacedIndex, const std::vector<int>& lastCoords) const {
-
+    bool checkWin(char player) const {
+        if (!_placedYet) return false;
         for (const std::vector<int>& d : this->directions) {
             int step = this->coordsToIndex(d);
             int f_steps = this->size, b_steps = size;
             for (int i = 0; i < dimensions; i++) {
                 if (d[i] == 1) {
-                    f_steps = std::min(f_steps, size - lastCoords[i]);
+                    f_steps = std::min(f_steps, size - this->lastPlacedCoords[i]);
                 }
                 else if (d[i] == -1) {
-                    b_steps = std::min(b_steps, lastCoords[i] + 1);
+                    b_steps = std::min(b_steps, this->lastPlacedCoords[i] + 1);
                 }
             }
 
-            int f = 0, fs = lastPlacedIndex;
+            int f = 0, fs = this->lastPlacedIndex;
             while (f < f_steps && this->board[fs]==player) {
                 f++;
                 fs += step;
@@ -136,7 +141,7 @@ class Board {
         return false;
     }
 
-    // Add drop. Piece falls along 2nd dimension. Returns false if dimension is full
+    // Add drop. Piece falls along 2nd dimension. Returns false if dimension is full.
     bool addDrop(const std::vector<int>& coords, char player) {
         if (coords.size() != dimensions-1) {
             std::cout << "Given coordinate size must equal exactly " << dimensions-1 << " dimensions.\n";
@@ -155,9 +160,12 @@ class Board {
             if (board[currentIndex] == EMPTY_CHAR) {
                 this->board[currentIndex] = player;
                 
-                // Optional: Store this index to make checkWin() much faster!
-                // this->lastPlacedIndex = currentIndex;
-                
+                // Store this index to make checkWin() faster.
+                this->lastPlacedIndex = currentIndex;
+                baseCoords[1] = h;
+                this->lastPlacedCoords = baseCoords;
+                this->_placedYet = true;
+
                 return true;
             }
             currentIndex += this->size; // 2. The jump offset for the 2nd dimension is always 'size'
