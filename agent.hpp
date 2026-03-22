@@ -7,11 +7,17 @@ using namespace std;
 class Agent {
 private:
     char token;
-    int player_number;
+    int playerNumber;
+    vector<char> nextPlayers;
 
 public:
-    char getToken() const;
-    int getPlayerNumber() const;
-    Agent(char yourToken, int playerNumber, vector<char> nextPlayers);
-    vector<int> chooseMove(const Board& board, int boardSize) const;
+    char getToken() const {
+        return token;
+    }
+    int getPlayerNumber() const {
+        return playerNumber;
+    }
+    Agent(char playerToken, int playerNumber, vector<char> nextPlayers) : token(playerToken), playerNumber(playerNumber), nextPlayers(nextPlayers) {}
+
+    virtual vector<int> chooseMove(const Board& board, int boardSize) = NULL; // Must be overridden
 };
