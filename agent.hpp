@@ -19,5 +19,5 @@ public:
     }
     Agent(char playerToken, int playerNumber, vector<char> nextPlayers) : token(playerToken), playerNumber(playerNumber), nextPlayers(nextPlayers) {}
 
-    virtual vector<int> chooseMove(const Board& board, int boardSize) = NULL; // Must be overridden
+    virtual vector<int> chooseMove(const Board& board, int boardSize) = 0; // Must be overridden
 };
