@@ -40,6 +40,22 @@ namespace BoardUtils {
         }
         return directions;
     }
+    // Returns sum of given coordinates
+    std::vector<int> addCoords(const std::vector<int>& coord1, const std::vector<int>& coord2) {
+        std::vector<int> c3;
+        for (int i = 0; i < coord1.size(); i++) {
+            c3.push_back(coord1[i] + coord2[i]);
+        }
+        return c3;
+    }
+    // Returns coord1 - coord2
+    std::vector<int> subtractCoords(const std::vector<int>& coord1, const std::vector<int>& coord2) {
+        std::vector<int> c3;
+        for (int i = 0; i < coord1.size(); i++) {
+            c3.push_back(coord1[i] - coord2[i]);
+        }
+        return c3;
+    }
 }
 
 class Board {
@@ -162,6 +178,16 @@ public:
             currentIndex += this->size; // 2. The jump offset for the 2nd dimension is always 'size'
         }
         return -1;
+    }
+
+    // Returns true if given coordinate is in the board.
+    bool isInBoard(const std::vector<int>& coord) const {
+        if (coord.size() != this->dimensions) return false;
+        for (auto d : coord) {
+            if (d < 0) return false;
+            if (d >= this->size) return false;
+        }
+        return true;
     }
 
     // Add drop. Piece falls along 2nd dimension. Returns false if dimension is full.
