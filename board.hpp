@@ -1,23 +1,23 @@
 #pragma once
 #include <cmath>
+#include <string>
 #include <vector>
 #include <algorithm>
-#include <string>
 #include <iostream>
 
 const char EMPTY_CHAR = '_';
 
 namespace BoardUtils {
-    int pow(const int& a, const int& b) {
+    int ipow(int a, int b) {
         if (b < 0) {
             std::cout << ("Exponent must be an integer greater than or equal to zero.\n");
             exit(1);
         }
         if (b <= 0) return 1;
-        return a * pow(a, b-1);
+        return a * ipow(a, b-1);
     }
     std::vector<std::vector<int>> getAllDirections(int dimensions) {
-        int total_vectors = (std::pow(3, dimensions) - 1) / 2;  // Pre-calculate the exact number of vectors to avoid dynamic reallocation
+        int total_vectors = (ipow(3, dimensions) - 1) / 2;  // Pre-calculate the exact number of vectors to avoid dynamic reallocation
         std::vector<std::vector<int>> directions;
         directions.reserve(total_vectors);
     
@@ -26,7 +26,7 @@ namespace BoardUtils {
             
             // The remaining dimensions to the right can be any combination of -1, 0, or 1
             int remaining_dims = dimensions - 1 - first_nonzero;
-            int combinations = std::pow(3, remaining_dims);
+            int combinations = ipow(3, remaining_dims);
     
             for (int c = 0; c < combinations; ++c) {
                 std::vector<int> dir(dimensions, 0); // Initialize with all 0s
@@ -48,6 +48,7 @@ class Board {
     std::vector<char> board;
     int size;
     int dimensions;
+    std::vector<std::vector<int>> directions;
 
     public:
     Board(int size, int dimensions=2) {
@@ -56,9 +57,10 @@ class Board {
             exit(5);
         }
         
-        this->board = std::vector<char>(BoardUtils::pow(size, dimensions), EMPTY_CHAR);
+        this->board = std::vector<char>(BoardUtils::ipow(size, dimensions), EMPTY_CHAR);
         this->size = size;
         this->dimensions = dimensions;
+        this->directions = BoardUtils::getAllDirections(dimensions);
 
         // for (uint8_t i = 0; i < board.size(); i++) {
         //     board[i] = i;
@@ -84,13 +86,44 @@ class Board {
         int mul = 1;
         for (int i = 0; i < dimensions; i++) {
             index += coords[i] * mul;
-            mul *= size;
+            mul *= this->size;
         }
         return index;
     }
 
-    bool checkWin(char player, int lastPlacedIndex) const {
-        
+    // last coords MUST match the lastPlacedIndex . This function will not check.
+    bool checkWin(char player, int lastPlacedIndex, const std::vector<int>& lastCoords) const {
+
+        for (const std::vector<int>& d : this->directions) {
+            int step = this->coordsToIndex(d);
+            int f_steps = this->size, b_steps = size;
+            for (int i = 0; i < dimensions; i++) {
+                if (d[i] == 1) {
+                    f_steps = std::min(f_steps, size - lastCoords[i]);
+                }
+                else if (d[i] == -1) {
+                    b_steps = std::min(b_steps, lastCoords[i] + 1);
+                }
+            }
+
+            int f = 0, fs = lastPlacedIndex;
+            while (f < f_steps && this->board[fs]==player) {
+                f++;
+                fs += step;
+            }
+            int b = 0, bs = lastPlacedIndex;
+            while (b < b_steps && this->board[bs]==player) {
+                b++;
+                bs -= step;
+            }
+
+            // Check streak distance...
+            if (f + b - 1 >= 4) {
+                return true; // A VICTORY!
+            }
+
+        }
+        return false;
     }
 
     // Add drop. Piece falls along 2nd dimension. Returns false if dimension is full
