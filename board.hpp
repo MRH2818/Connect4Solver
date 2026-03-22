@@ -47,7 +47,7 @@ private:
     std::vector<char> board;
     int size;
     int dimensions;
-    std::vector<std::vector<int>> directions;
+    std::vector<std::vector<int>> _directions;
 
     int lastPlacedIndex;
     std::vector<int> lastPlacedCoords;
@@ -62,7 +62,7 @@ public:
         this->board = std::vector<char>(BoardUtils::ipow(size, dimensions), EMPTY_CHAR);
         this->size = size;
         this->dimensions = dimensions;
-        this->directions = BoardUtils::getAllDirections(dimensions);
+        this->_directions = BoardUtils::getAllDirections(dimensions);
 
         // for (uint8_t i = 0; i < board.size(); i++) {
         //     board[i] = i;
@@ -77,7 +77,7 @@ public:
         this->board = std::vector<char>(str, str + length_of_string);
         this->size = size;
         this->dimensions = dimensions;
-        this->directions = BoardUtils::getAllDirections(dimensions);
+        this->_directions = BoardUtils::getAllDirections(dimensions);
         this->_placedYet = placedYet;
     }
     
@@ -108,7 +108,7 @@ public:
     // last coords MUST match the lastPlacedIndex . This function will not check.
     bool checkWin(char player) const {
         if (!_placedYet) return false;
-        for (const std::vector<int>& d : this->directions) {
+        for (const std::vector<int>& d : this->_directions) {
             int step = this->coordsToIndex(d);
             int f_steps = this->size, b_steps = size;
             for (int i = 0; i < dimensions; i++) {
@@ -172,7 +172,7 @@ public:
         return false;
     }
     
-    std::vector<char> getBoard() {
+    std::vector<char> getBoard() const {
         return board;
     }
     std::string toString() const {
