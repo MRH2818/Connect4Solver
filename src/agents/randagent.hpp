@@ -2,7 +2,7 @@
 #include <cstdlib>
 #include <vector>
 
-#include "connect4/agent.hpp"
+#include "agent.hpp"
 
 // Picks a legal drop by random trial
 class RandomAgent : public Agent {
