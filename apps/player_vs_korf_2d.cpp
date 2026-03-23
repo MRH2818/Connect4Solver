@@ -5,7 +5,7 @@
 
 #include "connect4/board.hpp"
 #include "connect4/ui/player_game.hpp"
-#include "maxnagent.hpp"
+#include "korfagent.hpp"
 
 int main() {
     const int boardSize = 7;
@@ -13,11 +13,11 @@ int main() {
 
     const char humanToken = 'X';
     const char agentToken = 'O';
-    MaxNAgent agent(agentToken, 2, { humanToken }, 1); // default depth 7; negamax + alpha-beta in 2-player mode
+    KorfAgent agent(agentToken, 2, { humanToken }, 6);
 
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
-    std::cout << "Connect 4 (you vs MaxN agent). Four in a row wins.\n";
+    std::cout << "Connect 4 (you vs Korf shallow-pruning agent). Four in a row wins.\n";
     std::cout << "You: " << humanToken << ", Agent: " << agentToken << "\n\n";
 
     int turn = std::rand() % 2;
@@ -41,12 +41,14 @@ int main() {
                 std::cout << "You win!\n";
                 break;
             }
+
             lastHumanMoveCoords = brd.getLastMoveCoords();
         } else {
             std::vector<std::vector<int>> oppLastMoves;
             if (!lastHumanMoveCoords.empty()) {
                 oppLastMoves.push_back(lastHumanMoveCoords);
             }
+
             std::vector<int> move = agent.chooseMove(brd, oppLastMoves, lastHumanMoveCoords.empty());
             brd.addDrop(move, agentToken);
             std::cout << "Agent played column " << move[0] << ".\n";
