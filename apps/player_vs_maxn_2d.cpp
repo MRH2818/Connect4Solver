@@ -13,14 +13,14 @@ int main() {
 
     const char humanToken = 'X';
     const char agentToken = 'O';
-    MaxNAgent agent(agentToken, 2, { humanToken }, 1);
+    MaxNAgent agent(agentToken, 2, { humanToken }, 1); // default depth 7; negamax + alpha-beta in 2-player mode
 
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
     std::cout << "Connect 4 (you vs MaxN agent). Four in a row wins.\n";
     std::cout << "You: " << humanToken << ", Agent: " << agentToken << "\n\n";
 
-    int turn = 1;
+    int turn = std::rand() % 2;
     int lastMove = -1;
     std::vector<int> lastHumanMoveCoords;
 
