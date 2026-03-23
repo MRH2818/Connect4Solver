@@ -54,7 +54,7 @@ private:
         cachedDimensions = board.getDimensions();
         winningLines.clear();
 
-        auto directions = BoardUtils::getAllDirections(cachedDimensions);
+        auto directions = board.getDirections();
         const int cellCount = static_cast<int>(board.getBoard().size());
 
         for (int index = 0; index < cellCount; ++index) {

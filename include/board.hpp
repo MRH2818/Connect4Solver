@@ -281,6 +281,9 @@ public:
     std::vector<int> getLastMoveCoords() const { // Get coords of last move
         return this->lastPlacedCoords;
     }
+    std::vector<std::vector<int>> getDirections() const { // GET ALL DIRECTIONS!
+        return this->_directions;
+    }
     std::string toString() const {
         return std::string(board.begin(), board.end());
     }
