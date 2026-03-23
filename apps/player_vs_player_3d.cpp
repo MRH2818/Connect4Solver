@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "connect4/board.hpp"
-#include "connect4/ui/player_game.hpp"
+#include "board.hpp"
+#include "ui/player_game.hpp"
 
 // Runs alternating-drop 3D Connect 4 using Board(boardSize, 3), addDrop({axis0, axis2}), checkWin.
 int main() {

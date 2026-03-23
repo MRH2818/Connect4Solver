@@ -3,8 +3,8 @@
 #include <iostream>
 #include <vector>
 
-#include "connect4/board.hpp"
-#include "connect4/ui/player_game.hpp"
+#include "board.hpp"
+#include "ui/player_game.hpp"
 #include "randagent.hpp"
 
 int main() {

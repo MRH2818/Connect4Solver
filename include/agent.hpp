@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include "connect4/board.hpp"
+#include "board.hpp"
 
 using namespace std;
 

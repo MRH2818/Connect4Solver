@@ -1,6 +1,6 @@
 #include <iostream>
-#include "connect4/board.hpp"
-#include "connect4/ui/player_game.hpp"
+#include "board.hpp"
+#include "ui/player_game.hpp"
 
 // Runs alternating-drop Connect 4 using Board::addDrop and Board::checkWin.
 int main() {

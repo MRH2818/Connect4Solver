@@ -4,7 +4,7 @@
 #include <cmath>
 #include <iostream>
 #include <string>
-#include "connect4/agent.hpp"
+#include "agent.hpp"
 
 using namespace std;
 
@@ -258,13 +258,7 @@ private:
 
     // UPDATE STREAKS, WILL NOT CHECK IF lastMoveIndex appropriately matches lastMoveCoords!
     // Update a provided streak list with a newly placed token.
-    void updateStreaks(
-        vector<Streak>& streaks,
-        const Board& b,
-        char token,
-        int lastMoveIndex,
-        vector<int> lastMoveCoords
-    ) {
+    void updateStreaks(vector<Streak>& streaks, const Board& b, char token, int lastMoveIndex, vector<int> lastMoveCoords) {
         vector<Streak> newStreaks;
         vector<bool> used(streaks.size(), false);
     
@@ -272,16 +266,16 @@ private:
         auto directions = BoardUtils::getAllDirections(dims);
     
         // Only use "positive" directions to avoid duplicates
-        auto isCanonical = [](const vector<int>& dir) {
-            for (int d : dir) {
-                if (d < 0) return false;
-                if (d > 0) return true;
-            }
-            return false;
-        };
+        // auto isCanonical = [](const vector<int>& dir) {
+        //     for (int d : dir) {
+        //         if (d < 0) return false;
+        //         if (d > 0) return true;
+        //     }
+        //     return false;
+        // };
     
         for (auto& dir : directions) {
-            if (!isCanonical(dir)) continue;
+            // if (!isCanonical(dir)) continue;
     
             vector<int> start = lastMoveCoords;
             vector<int> end = lastMoveCoords;

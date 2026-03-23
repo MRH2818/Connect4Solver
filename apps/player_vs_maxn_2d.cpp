@@ -3,8 +3,8 @@
 #include <iostream>
 #include <vector>
 
-#include "connect4/board.hpp"
-#include "connect4/ui/player_game.hpp"
+#include "board.hpp"
+#include "ui/player_game.hpp"
 #include "maxnagent.hpp"
 
 int main() {
@@ -42,7 +42,8 @@ int main() {
                 break;
             }
             lastHumanMoveCoords = brd.getLastMoveCoords();
-        } else {
+        }
+        else {
             std::vector<std::vector<int>> oppLastMoves;
             if (!lastHumanMoveCoords.empty()) {
                 oppLastMoves.push_back(lastHumanMoveCoords);
