@@ -77,6 +77,17 @@ private:
     }
 
 public:
+    // Deep copy
+    Board(const Board& other)
+        : board(other.board),
+          size(other.size),
+          dimensions(other.dimensions),
+          _directions(other._directions),
+          availableToPlay(other.availableToPlay),
+          lastPlacedIndex(other.lastPlacedIndex),
+          lastPlacedCoords(other.lastPlacedCoords),
+          _placedYet(other._placedYet) {}
+
     Board(int size, int dimensions=2) {
         if (dimensions < 2) {
             std::cout << "Dimensions must be at least 2\n";
@@ -157,7 +168,7 @@ public:
         return coords;
     }
 
-    // last coords MUST match the lastPlacedIndex . This function will not check.
+    // addDrop (with a successful result) should be called first
     bool checkWin(char player) const {
         if (!_placedYet) return false;
         for (const std::vector<int>& d : this->_directions) {
@@ -244,10 +255,10 @@ public:
     }
     // Drop moves whose column is not full (see availableToPlay).
     std::vector<std::vector<int>> getAvailableMoves() const {
-        std::vector<std::vector<int>> moves(availableToPlay.size());
+        std::vector<std::vector<int>> moves;
         for (int m = 0; m < availableToPlay.size(); ++m) {
             if (availableToPlay[m]) {
-                moves[m] = dropMoveCoords(m);
+                moves.push_back(dropMoveCoords(m));
             }
         }
         return moves;
@@ -263,6 +274,12 @@ public:
     }
     char getCell(int index) const {
         return board[index];
+    }
+    int getLastMoveIndex() const { // Get index of last move
+        return this->lastPlacedIndex;
+    }
+    std::vector<int> getLastMoveCoords() const { // Get coords of last move
+        return this->lastPlacedCoords;
     }
     std::string toString() const {
         return std::string(board.begin(), board.end());

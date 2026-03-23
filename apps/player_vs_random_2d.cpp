@@ -43,7 +43,7 @@ int main() {
             }
             lastMove = col;
         } else {
-            std::vector<int> move = agent.chooseMove(brd, {lastMove}, lastMove==-1);
+            std::vector<int> move = agent.chooseMove(brd, {{lastMove}}, lastMove==-1);
             brd.addDrop(move, agentToken);
             std::cout << "Agent played column " << move[0] << ".\n";
 
