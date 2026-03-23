@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-EMCC=${EMCC:-emcc}
+EMXX=${EMXX:-em++}
 OUT_DIR=${OUT_DIR:-dist}
 IMGUI_DIR=${IMGUI_DIR:-third_party/imgui}
 
 mkdir -p "$OUT_DIR"
 
-"$EMCC" \
+"$EMXX" \
   -std=c++17 \
   -O3 \
   -Iinclude \

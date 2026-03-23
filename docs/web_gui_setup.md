@@ -2,17 +2,40 @@
 
 This project can be wrapped in a browser UI by combining the existing header-only game logic with Dear ImGui, SDL2, OpenGL ES 3, and Emscripten.
 
-## 1. Clone Dear ImGui into the project
+## Does this work on Windows?
+
+**Yes, with one caveat:** the original `build_web.sh` and `Makefile` are Unix-oriented, so on Windows you should either:
+
+- use **PowerShell** with `build_web.ps1`, or
+- use **WSL / Git Bash / MSYS2** with `build_web.sh`.
+
+The C++ source in `web_app.cpp` is portable for an Emscripten toolchain, and the new PowerShell build script uses the same source files and compiler flags as the shell script.
+
+## 1. Install Emscripten on Windows
+
+A typical setup is:
+
+```powershell
+git clone https://github.com/emscripten-core/emsdk.git
+cd emsdk
+.\emsdk install latest
+.\emsdk activate latest
+.\emsdk_env.ps1
+```
+
+That last command puts `em++`, `emcc`, and the rest of the Emscripten tools on your `PATH` for the current PowerShell session.
+
+## 2. Clone Dear ImGui into the project
 
 From the repository root:
 
-```bash
+```powershell
 git clone https://github.com/ocornut/imgui.git third_party/imgui
 ```
 
-That layout matches the include paths used by `web_app.cpp` and `build_web.sh`.
+That layout matches the include paths used by `web_app.cpp`, `build_web.sh`, and `build_web.ps1`.
 
-## 2. Directory layout
+## 3. Directory layout
 
 After cloning ImGui, the relevant files should look like this:
 
@@ -33,6 +56,7 @@ Connect4Solver/
 │       └── imgui_impl_opengl3.h
 ├── web_app.cpp
 ├── build_web.sh
+├── build_web.ps1
 └── Makefile
 ```
 
@@ -41,18 +65,28 @@ The key backend files are:
 - `third_party/imgui/backends/imgui_impl_sdl2.cpp`
 - `third_party/imgui/backends/imgui_impl_opengl3.cpp`
 
-## 3. Build with Emscripten
+## 4. Build with Emscripten
 
-After activating your Emscripten SDK environment (`source /path/to/emsdk/emsdk_env.sh`), run:
+### Windows PowerShell
+
+After running `emsdk_env.ps1`, build with:
+
+```powershell
+.\build_web.ps1
+```
+
+### WSL / Git Bash / macOS / Linux
+
+After activating your Emscripten SDK environment (for example `source /path/to/emsdk/emsdk_env.sh`), run:
 
 ```bash
 ./build_web.sh
 ```
 
-Equivalent direct `emcc` command:
+### Equivalent direct compiler command
 
 ```bash
-emcc -std=c++17 -O3 \
+em++ -std=c++17 -O3 \
   -Iinclude -Isrc/agents -Ithird_party/imgui -Ithird_party/imgui/backends \
   web_app.cpp \
   third_party/imgui/imgui.cpp \
@@ -66,19 +100,25 @@ emcc -std=c++17 -O3 \
   -o dist/connect4_web.html
 ```
 
-## 4. Serve locally
+## 5. Serve locally
 
-From the repository root:
+### PowerShell or Command Prompt
 
-```bash
-python3 -m http.server 8000 --directory dist
+```powershell
+python -m http.server 8000 --directory dist
+```
+
+### If `python` is not on PATH
+
+```powershell
+py -m http.server 8000 --directory dist
 ```
 
 Then open:
 
 - <http://localhost:8000/connect4_web.html>
 
-## 5. UI behavior in `web_app.cpp`
+## 6. UI behavior in `web_app.cpp`
 
 The entry point provides:
 
@@ -89,7 +129,7 @@ The entry point provides:
 - `Reset Game` and `Think` controls.
 - Human column clicks that call `Board::addDrop`, then trigger an AI move on the next frame.
 
-## 6. Non-blocking AI recommendation
+## 7. Non-blocking AI recommendation
 
 Because the WebAssembly build runs on the main browser thread, a long synchronous search can freeze rendering.
 
@@ -112,7 +152,7 @@ Refactor each AI into a small search state machine:
 
 That lets the main loop spend a fixed amount of work per frame and keeps the UI responsive.
 
-## 7. Visualizing 4D and 5D boards
+## 8. Visualizing 4D and 5D boards
 
 A practical ImGui concept is:
 
@@ -139,7 +179,7 @@ Flatten all extra dimensions `(z, w, v, ...)` into a single slice index and show
 
 That is exactly what `web_app.cpp` does today, and it keeps the UX simple while still supporting arbitrary dimensions from the existing `Board` API.
 
-## 8. Current engine limitations to know about
+## 9. Current engine limitations to know about
 
 The existing core engine currently exposes:
 
