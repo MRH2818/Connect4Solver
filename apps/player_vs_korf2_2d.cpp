@@ -5,7 +5,7 @@
 
 #include "board.hpp"
 #include "ui/player_game.hpp"
-#include "korfagent.hpp"
+#include "korf_2.hpp"
 
 int main() {
     const int boardSize = 12;
@@ -13,11 +13,11 @@ int main() {
 
     const char humanToken = 'X';
     const char agentToken = 'O';
-    KorfAgent agent(agentToken, 2, { humanToken }, 6);
+    Korf2Agent agent(agentToken, 2, { humanToken }, 4);
 
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
-    std::cout << "Connect 4 (you vs Korf shallow-pruning agent). Four in a row wins.\n";
+    std::cout << "Connect 4 (you vs Korf2 agent). Four in a row wins.\n";
     std::cout << "You: " << humanToken << ", Agent: " << agentToken << "\n\n";
 
     int turn = std::rand() % 2;

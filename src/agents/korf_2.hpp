@@ -5,10 +5,23 @@
 #include <unordered_map>
 #include <vector>
 #include "agent.hpp"
+#include <tuple>
+
+/*
+BASED ON THE KORF AGENT, BUT WITH MORE MODULAR IMPROVEMENTS
+*/
 
 using namespace std;
 
-class KorfAgent : public Agent {
+struct SearchResult {
+    unordered_map<char, float> scores;
+    int bestMoveIndex;
+    int depthSearched;
+};
+
+unordered_map<string, SearchResult> searchCache; // Key: board.toString() --> Value: The result of the search at a specific depth
+
+class Korf2Agent : public Agent {
 private:
     static constexpr bool _debug_thinking = false;
     static constexpr bool _debug_root_only = true;
@@ -22,8 +35,7 @@ private:
     int searchDepth;
     int cachedBoardSize = -1;
     int cachedDimensions = -1;
-    vector<array<int, 4>> winningLines;
-
+    
     std::string moveToString(const std::vector<int>& move) const {
         std::string out = "[";
         for (size_t i = 0; i < move.size(); i++) {
@@ -45,6 +57,14 @@ private:
         }
     }
 
+    // OPTIMIZATION 1: Mapping cells to the lines they belong to
+    vector<array<int, 4>> winningLines;
+    vector<vector<int>> cellToLines; 
+
+    // OPTIMIZATION 2: Transposition Table for board evaluations
+    // Key: board.toString(), Value: The calculated score map
+    unordered_map<string, unordered_map<char, float>> evalCache;
+
     void ensureWinningLines(const Board& board) {
         if (cachedBoardSize == board.getSize() && cachedDimensions == board.getDimensions() && !winningLines.empty()) {
             return;
@@ -53,9 +73,11 @@ private:
         cachedBoardSize = board.getSize();
         cachedDimensions = board.getDimensions();
         winningLines.clear();
+        
+        const int cellCount = static_cast<int>(board.getBoard().size());
+        cellToLines.assign(cellCount, vector<int>());
 
         auto directions = board.getDirections();
-        const int cellCount = board.getBoard().size();
 
         for (int index = 0; index < cellCount; ++index) {
             auto start = board.indexToCoords(index);
@@ -75,53 +97,40 @@ private:
                 }
 
                 if (valid) {
+                    int lineIdx = winningLines.size();
                     winningLines.push_back(line);
+                    // Map every cell in this line back to the line index
+                    for (int cellIdx : line) {
+                        cellToLines[cellIdx].push_back(lineIdx);
+                    }
                 }
             }
         }
     }
 
-    char detectWinner(const Board& board) {
-        ensureWinningLines(board);
-        for (const auto& line : winningLines) {
-            char token = board.getCell(line[0]);
-            if (token == EMPTY_CHAR) continue;
-            if (board.getCell(line[1]) == token &&
-                board.getCell(line[2]) == token &&
-                board.getCell(line[3]) == token) {
-                return token;
-            }
-        }
-        return '\0';
-    }
-
-    unordered_map<char, float> zeroScores(const vector<char>& orderedPlayerCodes) const {
-        unordered_map<char, float> scores;
-        for (char token : orderedPlayerCodes) {
-            scores[token] = 0.0f;
-        }
-        return scores;
-    }
-
-    unordered_map<char, float> evaluateEndPosition(
-        const Board& board,
-        const std::vector<char>& orderedPlayerCodes,
-        int numPossibleMoves
+    unordered_map<char, float> evaluateEndPosition( const Board& board, const vector<char>& orderedPlayerCodes, int numPossibleMoves
     ) {
+        // OPTIMIZATION 2: Check Transposition Table first
+        string boardKey = board.toString();
+        if (evalCache.count(boardKey)) {
+            return evalCache[boardKey];
+        }
+
         auto scores = zeroScores(orderedPlayerCodes);
         char winner = detectWinner(board);
+        
         if (winner != '\0') {
             scores[winner] = _sum_bound;
+            evalCache[boardKey] = scores; // Cache result
             return scores;
         }
 
         if (numPossibleMoves == 0) {
-            return scores; // IF IT'S A DRAW, RETURN ALL ZEROS!
+            evalCache[boardKey] = scores; 
+            return scores;
         }
 
-        ensureWinningLines(board);
         auto rawScores = zeroScores(orderedPlayerCodes);
-
         for (const auto& line : winningLines) {
             char owner = '\0';
             int ownedCount = 0;
@@ -144,32 +153,43 @@ private:
 
             if (blocked || owner == '\0') continue;
 
-            switch (ownedCount) {
-                case 2:
-                    rawScores[owner] += _two_weight;
-                    break;
-                case 3:
-                    rawScores[owner] += _three_weight;
-                    break;
-                case 4:
-                    rawScores[owner] += _win_weight;
-                    break;
-                default:
-                    break;
-            }
+            if (ownedCount == 2) rawScores[owner] += _two_weight;
+            else if (ownedCount == 3) rawScores[owner] += _three_weight;
+            else if (ownedCount == 4) rawScores[owner] += _win_weight;
         }
 
         float total = 0.0f;
-        for (char token : orderedPlayerCodes) {
-            total += rawScores[token];
+        for (char token : orderedPlayerCodes) total += rawScores[token];
+
+        if (total > 0.0f) {
+            for (char token : orderedPlayerCodes) {
+                scores[token] = _heuristic_bound * (rawScores[token] / total);
+            }
         }
 
-        if (total <= 0.0f) {
-            return scores;
-        }
+        // Cache the final normalized scores
+        evalCache[boardKey] = scores;
+        return scores;
+    }
 
+    char detectWinner(const Board& board) {
+        ensureWinningLines(board);
+        for (const auto& line : winningLines) {
+            char token = board.getCell(line[0]);
+            if (token == EMPTY_CHAR) continue;
+            if (board.getCell(line[1]) == token &&
+                board.getCell(line[2]) == token &&
+                board.getCell(line[3]) == token) {
+                return token;
+            }
+        }
+        return '\0';
+    }
+
+    unordered_map<char, float> zeroScores(const vector<char>& orderedPlayerCodes) const {
+        unordered_map<char, float> scores;
         for (char token : orderedPlayerCodes) {
-            scores[token] = _heuristic_bound * (rawScores[token] / total);
+            scores[token] = 0.0f;
         }
         return scores;
     }
@@ -205,6 +225,17 @@ private:
                 " | bound " + std::to_string(bound));
         }
 
+        // LOOK UP RESULT ON THE TRANSPOSITION TABLE!!!
+        string boardKey = originalBoard.toString();
+        if (searchCache.count(boardKey)) {
+            const auto& entry = searchCache[boardKey];
+            // Only use the cached result if it was searched at an equal or greater depth
+            if (entry.depthSearched >= depth) {
+                if (bestMoveIndex) *bestMoveIndex = entry.bestMoveIndex;
+                return entry.scores;
+            }
+        }
+
         if (depth == 0 || possibleMoves.empty()) {
             return evaluateEndPosition(originalBoard, orderedPlayerCodes, possibleMoves.size());
         }
@@ -224,10 +255,10 @@ private:
         }
 
         unordered_map<char, float> bestEval;
-        bool haveBest = false;
+        int _haveBest = -1;
 
-        for (int i = 0; i < static_cast<int>(possibleMoves.size()); ++i) {
-            if (haveBest && bestEval[currentPlayer] >= bound) {
+        for (int i = 0; i < possibleMoves.size(); ++i) {
+            if (_haveBest != -1 && bestEval[currentPlayer] >= bound) {
                 if (!_debug_root_only || ply == 0) {
                     logLine(ply, "Shallow prune before move " + moveToString(possibleMoves[i]) +
                         " because " + std::to_string(bestEval[currentPlayer]) +
@@ -243,12 +274,12 @@ private:
             nextPlayerCodes.push_back(currentPlayer);
 
             // EXECUTE RECURSIVE ACTION!!!
-            float childBound = haveBest ? (_sum_bound - bestEval[currentPlayer]) : _sum_bound;
+            float childBound = _haveBest != -1 ? (_sum_bound - bestEval[currentPlayer]) : _sum_bound;
             auto evaluation = shallowValueMoves( virtualBoard, virtualBoard.getAvailableMoves(), nextPlayerCodes, depth-1, childBound, nullptr, ply+1 );
 
-            if (!haveBest || evaluation[currentPlayer] > bestEval[currentPlayer]) {
+            if (_haveBest == -1 || evaluation[currentPlayer] > bestEval[currentPlayer]) {
                 bestEval = evaluation;
-                haveBest = true;
+                _haveBest = i;
                 if (bestMoveIndex != nullptr) {
                     *bestMoveIndex = i;
                 }
@@ -259,14 +290,17 @@ private:
             }
         }
 
-        if (!haveBest) {
+        if (_haveBest == -1) {
             return evaluateEndPosition(originalBoard, orderedPlayerCodes, static_cast<int>(possibleMoves.size()));
         }
+
+        // CACHE THE RESULT!!!
+        searchCache[boardKey] = { bestEval, _haveBest, depth };
         return bestEval;
     }
 
 public:
-    KorfAgent(char playerToken, int playerNumber, vector<char> nextPlayers, int searchDepth = 7)
+    Korf2Agent(char playerToken, int playerNumber, vector<char> nextPlayers, int searchDepth = 7)
         : Agent(playerToken, playerNumber, nextPlayers), searchDepth(searchDepth) {}
 
     std::vector<int> chooseMove(const Board& board, const vector<vector<int>>& oppLastMoves, bool firstMove=false) override {
@@ -275,13 +309,17 @@ public:
 
         ensureWinningLines(board);
 
-        logLine(0, "=============== KORF THINK START ===============");
+        logLine(0, "=============== KORF2 THINK START ===============");
         logLine(0, "Agent token: " + std::string(1, this->getToken()));
 
         auto availableMoves = board.getAvailableMoves();
         if (availableMoves.empty()) {
             return {};
         }
+
+        // CLEAR THE CACHE : won't be needed again, as we're progressing the search tree
+        searchCache.clear();
+        evalCache.clear();
 
         vector<char> allPlayers = { this->getToken() };
         allPlayers.insert(allPlayers.end(), this->nextPlayers.begin(), this->nextPlayers.end());
@@ -299,7 +337,7 @@ public:
 
         logLine(0, "Selected move: " + moveToString(availableMoves[bestMove]) +
             " | score: " + std::to_string(finalEval[this->getToken()]));
-        logLine(0, "================ KORF THINK END ================");
+        logLine(0, "================ KORF2 THINK END ================");
 
         return availableMoves[bestMove];
     }
