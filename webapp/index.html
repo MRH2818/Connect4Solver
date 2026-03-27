@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>N-D Connect 4 Webapp</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header>
+    <h1>N-D Connect 4 Playground</h1>
+    <p>Pure HTML/CSS/JavaScript + jQuery. Supports 2D, 3D, and 4D+ via slice explorer.</p>
+  </header>
+
+  <main>
+    <section class="panel controls">
+      <h2>Game Setup</h2>
+      <div class="grid">
+        <label>Board size per axis
+          <input id="sizeInput" type="number" min="4" max="8" value="6" />
+        </label>
+        <label>Dimensions
+          <input id="dimensionsInput" type="number" min="2" max="6" value="2" />
+        </label>
+        <label>Connect length
+          <input id="connectInput" type="number" min="4" max="8" value="4" />
+        </label>
+        <label>Gravity axis
+          <input id="gravityAxisInput" type="number" min="0" value="1" />
+        </label>
+        <label>Player 2 type
+          <select id="player2Type">
+            <option value="human">Human</option>
+            <option value="ai">AI Worker</option>
+          </select>
+        </label>
+        <label>Render mode
+          <select id="renderMode">
+            <option value="2d">2D Grid</option>
+            <option value="3d">3D Isometric</option>
+            <option value="slice">N-D Slice Explorer</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="row">
+        <button id="newGameBtn">New Game</button>
+        <button id="undoBtn">Undo</button>
+      </div>
+
+      <h3>Current Move</h3>
+      <p class="help">Pick drop coordinates (all axes except gravity axis):</p>
+      <div id="dropCoordinateControls" class="grid"></div>
+      <button id="playMoveBtn">Play Move</button>
+
+      <h3>Slice Settings (for 3D and 4D+)</h3>
+      <div id="sliceControls" class="grid"></div>
+    </section>
+
+    <section class="panel board-panel">
+      <h2>Board</h2>
+      <canvas id="boardCanvas" width="960" height="640"></canvas>
+      <div id="status"></div>
+      <div id="legend" class="legend">
+        <span class="chip p1"></span> Player 1 (X)
+        <span class="chip p2"></span> Player 2 (O)
+      </div>
+      <div id="lastAIMove"></div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Tip: In 4D+, use Slice Explorer mode and adjust fixed-axis values.</p>
+  </footer>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
