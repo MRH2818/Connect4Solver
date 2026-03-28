@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Arena</title>
+  <link rel="stylesheet" href="../shared/styles.css" />
+</head>
+<body
+  data-game-mode="3d"
+  data-mode-label="3D Arena"
+  data-mode-description="Dedicated isometric board play with layered rendering."
+  data-default-size="4"
+  data-default-connect="4"
+  data-default-gravity-axis="1"
+  data-default-dimensions="3"
+  data-min-dimensions="3"
+  data-max-dimensions="3"
+  data-render-mode="3d"
+  data-dimensions-editable="false"
+  data-gravity-editable="true"
+>
+  <div class="game-page">
+    <header class="game-header">
+      <div>
+        <p class="eyebrow">DEDICATED MODE</p>
+        <h1>3D Arena</h1>
+        <p id="presetSummary" class="subtle-text">Dedicated isometric board play with layered rendering.</p>
+      </div>
+      <div class="game-header-actions">
+        <a class="button-link secondary" href="../index.html">Back Home</a>
+        <button id="resetDefaultsBtn" type="button" class="secondary">Reset Defaults</button>
+        <button id="newGameBtn" type="button">Apply Setup</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel controls">
+        <h2>Game Setup</h2>
+        <p id="pageModeNote" class="mode-banner"></p>
+
+        <div class="grid">
+          <label>Player count
+            <input id="playerCountInput" type="number" min="2" max="6" value="2" />
+          </label>
+          <label>Board size per axis
+            <input id="sizeInput" type="number" min="4" max="8" value="4" />
+          </label>
+          <label id="dimensionsControl" class="is-hidden">Dimensions
+            <input id="dimensionsInput" type="number" min="3" max="3" value="3" />
+          </label>
+          <label>Connect length
+            <input id="connectInput" type="number" min="4" max="8" value="4" />
+          </label>
+          <label id="gravityControl">Gravity axis
+            <input id="gravityAxisInput" type="number" min="0" value="1" />
+          </label>
+          <label id="player2TypeLabel">Player 2 type
+            <select id="player2Type">
+              <option value="human">Human</option>
+              <option value="ai">AI Worker</option>
+            </select>
+          </label>
+        </div>
+
+        <input id="renderMode" type="hidden" value="3d" />
+
+        <div id="playerModeHint" class="inline-note"></div>
+
+        <div class="row">
+          <button id="undoBtn" type="button" class="secondary">Undo</button>
+        </div>
+
+        <h3>Current Move</h3>
+        <p class="help">Pick drop coordinates for each non-gravity axis, then place the piece.</p>
+        <div id="dropCoordinateControls" class="grid"></div>
+        <button id="playMoveBtn" type="button">Play Move</button>
+
+        <div id="sliceSection" class="subpanel">
+          <h3>Slice Settings</h3>
+          <p class="help">Adjust fixed-axis values while the 3D board renders the main projection.</p>
+          <div id="sliceControls" class="grid"></div>
+        </div>
+      </section>
+
+      <section class="panel board-panel">
+        <div class="board-panel-header">
+          <div>
+            <h2>Board</h2>
+            <p class="subtle-text">The canvas stays in 3D mode on this page.</p>
+          </div>
+          <div id="status"></div>
+        </div>
+        <canvas id="boardCanvas" width="960" height="640"></canvas>
+        <div id="legend" class="legend"></div>
+        <div id="lastAIMove" class="subtle-text"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="../shared/game.js"></script>
+</body>
+</html>

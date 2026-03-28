@@ -13,7 +13,8 @@ BASED ON THE KORF AGENT, BUT WITH MORE MODULAR IMPROVEMENTS
 
 using namespace std;
 
-class Korf2Agent : public Agent {
+
+class Korf2IterativeAgent : public Agent {
     private:
     static constexpr bool _debug_thinking = false;
     static constexpr bool _debug_root_only = true;
@@ -23,6 +24,7 @@ class Korf2Agent : public Agent {
     static constexpr float _two_weight = 1.0f;
     static constexpr float _three_weight = 6.0f;
     static constexpr float _win_weight = 1000.0f;
+    
     struct SearchResult {
         unordered_map<char, float> scores;
         int bestMoveIndex;
@@ -226,8 +228,8 @@ class Korf2Agent : public Agent {
 
         // LOOK UP RESULT ON THE TRANSPOSITION TABLE!!!
         string boardKey = originalBoard.toString();
-        if (searchCache.count(boardKey)) {
-            const auto& entry = searchCache[boardKey];
+        if (this->searchCache.count(boardKey)) {
+            const auto& entry = this->searchCache[boardKey];
             // Only use the cached result if it was searched at an equal or greater depth
             if (entry.depthSearched >= depth) {
                 if (bestMoveIndex) *bestMoveIndex = entry.bestMoveIndex;
@@ -299,7 +301,7 @@ class Korf2Agent : public Agent {
     }
 
 public:
-    Korf2Agent(char playerToken, int playerNumber, vector<char> nextPlayers, int searchDepth = 7)
+    Korf2IterativeAgent(char playerToken, int playerNumber, vector<char> nextPlayers, int searchDepth = 7)
         : Agent(playerToken, playerNumber, nextPlayers), searchDepth(searchDepth) {}
 
     std::vector<int> chooseMove(const Board& board, const vector<vector<int>>& oppLastMoves, bool firstMove=false) override {
@@ -308,7 +310,7 @@ public:
 
         ensureWinningLines(board);
 
-        logLine(0, "=============== KORF2 THINK START ===============");
+        logLine(0, "=============== KORF2 ITERATIVE THINK START ===============");
         logLine(0, "Agent token: " + std::string(1, this->getToken()));
 
         auto availableMoves = board.getAvailableMoves();
@@ -336,7 +338,7 @@ public:
 
         logLine(0, "Selected move: " + moveToString(availableMoves[bestMove]) +
             " | score: " + std::to_string(finalEval[this->getToken()]));
-        logLine(0, "================ KORF2 THINK END ================");
+        logLine(0, "================ KORF2 ITERATIVE THINK END ================");
 
         return availableMoves[bestMove];
     }

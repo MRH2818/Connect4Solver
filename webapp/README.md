@@ -23,3 +23,10 @@ python3 -m http.server 8080
 ```
 
 Then visit `http://localhost:8080/webapp/`.
+
+## Page Structure
+
+- `webapp/index.html` is the launcher page.
+- `webapp/2d/index.html` is the dedicated 2D gameplay page.
+- `webapp/3d/index.html` is the dedicated 3D gameplay page.
+- `webapp/4d-plus/index.html` is the dedicated 4D+ gameplay page.

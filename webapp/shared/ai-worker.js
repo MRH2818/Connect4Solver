@@ -27,16 +27,6 @@ class WorkerBoard {
     return index;
   }
 
-  indexToCoords(index) {
-    const coords = new Array(this.dimensions).fill(0);
-    let temp = index;
-    for (let i = 0; i < this.dimensions; i += 1) {
-      coords[i] = temp % this.size;
-      temp = Math.floor(temp / this.size);
-    }
-    return coords;
-  }
-
   dropMoveIndex(dropCoords) {
     let index = 0;
     let mul = 1;
@@ -96,10 +86,10 @@ class WorkerBoard {
   }
 
   checkWinAt(player, lastIndex, lastCoords) {
-    for (const d of this.directions) {
+    for (const dir of this.directions) {
       let streak = 1;
-      streak += this.walkRay(lastIndex, lastCoords, d, player);
-      streak += this.walkRay(lastIndex, lastCoords, d.map((v) => -v), player);
+      streak += this.walkRay(lastIndex, lastCoords, dir, player);
+      streak += this.walkRay(lastIndex, lastCoords, dir.map((v) => -v), player);
       if (streak >= this.connectN) return true;
     }
     return false;
@@ -125,9 +115,9 @@ class WorkerBoard {
     const total = this.ipow(this.size, totalDropAxes);
     const moves = [];
 
-    for (let m = 0; m < total; m += 1) {
-      if (this.availableToPlay[m] === 0) continue;
-      let temp = m;
+    for (let moveIndex = 0; moveIndex < total; moveIndex += 1) {
+      if (this.availableToPlay[moveIndex] === 0) continue;
+      let temp = moveIndex;
       const coords = new Array(totalDropAxes).fill(0);
       for (let i = 0; i < totalDropAxes; i += 1) {
         coords[i] = temp % this.size;
@@ -135,6 +125,7 @@ class WorkerBoard {
       }
       moves.push(coords);
     }
+
     return moves;
   }
 
@@ -151,7 +142,7 @@ class WorkerBoard {
 }
 
 function inBounds(coords, size) {
-  return coords.every((c) => c >= 0 && c < size);
+  return coords.every((coord) => coord >= 0 && coord < size);
 }
 
 function ipow(base, exp) {
@@ -165,10 +156,10 @@ function getAllDirections(dimensions) {
   for (let first = 0; first < dimensions; first += 1) {
     const remaining = dimensions - 1 - first;
     const combos = ipow(3, remaining);
-    for (let c = 0; c < combos; c += 1) {
+    for (let combo = 0; combo < combos; combo += 1) {
       const dir = new Array(dimensions).fill(0);
       dir[first] = 1;
-      let temp = c;
+      let temp = combo;
       for (let r = 0; r < remaining; r += 1) {
         dir[first + 1 + r] = (temp % 3) - 1;
         temp = Math.floor(temp / 3);
@@ -184,7 +175,6 @@ function chooseMoveWithHeuristic(state, player, opponent) {
   const legalMoves = board.getAvailableMoves();
   if (!legalMoves.length) return null;
 
-  // Immediate win.
   for (const move of legalMoves) {
     const probe = new WorkerBoard(board.cloneState());
     const landing = probe.addDrop(move, player);
@@ -193,7 +183,6 @@ function chooseMoveWithHeuristic(state, player, opponent) {
     }
   }
 
-  // Block opponent immediate win.
   for (const move of legalMoves) {
     const probe = new WorkerBoard(board.cloneState());
     const landing = probe.addDrop(move, opponent);
@@ -202,15 +191,14 @@ function chooseMoveWithHeuristic(state, player, opponent) {
     }
   }
 
-  // Center-ish heuristic: minimize squared distance to center on drop coords.
   const center = (board.size - 1) / 2;
   let best = legalMoves[0];
   let bestScore = Number.POSITIVE_INFINITY;
   for (const move of legalMoves) {
     let score = 0;
     for (const coord of move) {
-      const d = coord - center;
-      score += d * d;
+      const distance = coord - center;
+      score += distance * distance;
     }
     if (score < bestScore) {
       bestScore = score;
@@ -224,7 +212,11 @@ function chooseMoveWithHeuristic(state, player, opponent) {
 self.onmessage = (event) => {
   const { type, payload } = event.data;
   if (type !== "chooseMove") return;
-  const { state, aiPlayer, humanPlayer } = payload;
+
+  const { requestId, state, aiPlayer, humanPlayer } = payload;
   const result = chooseMoveWithHeuristic(state, aiPlayer, humanPlayer);
-  self.postMessage({ type: "moveResult", payload: result });
+  self.postMessage({
+    type: "moveResult",
+    payload: result ? { ...result, requestId } : { requestId },
+  });
 };
