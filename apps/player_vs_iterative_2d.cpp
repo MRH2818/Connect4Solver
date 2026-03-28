@@ -5,7 +5,7 @@
 
 #include "board.hpp"
 #include "ui/player_game.hpp"
-#include "korf_2.hpp"
+#include "korf2_iterative.hpp"
 
 int main() {
     const int boardSize = 12;
@@ -13,7 +13,7 @@ int main() {
 
     const char humanToken = 'X';
     const char agentToken = 'O';
-    Korf2Agent agent(agentToken, 2, { humanToken }, 6);
+    Korf2IterativeAgent agent(agentToken, 2, { humanToken }, 12, 5000);
 
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
