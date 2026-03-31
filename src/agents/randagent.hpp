@@ -7,7 +7,7 @@
 // Picks a legal drop by random trial
 class RandomAgent : public Agent {
 public:
-    RandomAgent(char playerToken, int playerNumber, std::vector<char> nextPlayers)
+    RandomAgent(char playerToken, int playerNumber, const std::vector<char>& nextPlayers)
         : Agent(playerToken, playerNumber, nextPlayers) {}
 
     std::vector<int> chooseMove(const Board& board, const vector<vector<int>>& oppLastMoves, bool firstMove=false) override {

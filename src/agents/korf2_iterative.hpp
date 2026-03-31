@@ -462,15 +462,8 @@ private:
 
 public:
     Korf2IterativeAgent(
-        char playerToken,
-        int playerNumber,
-        vector<char> nextPlayers,
-        int searchDepth = 7,
-        int timeLimitMs = 3000
-    )
-        : Agent(playerToken, playerNumber, nextPlayers),
-          searchDepth(searchDepth),
-          timeLimitMs(timeLimitMs) {}
+        char playerToken, int playerNumber, const vector<char>& nextPlayers, int searchDepth = 7, int timeLimitMs = 3000)
+        : Agent(playerToken, playerNumber, nextPlayers), searchDepth(searchDepth), timeLimitMs(timeLimitMs) {}
 
     vector<int> chooseMove(const Board& board, const vector<vector<int>>& oppLastMoves, bool firstMove = false) override {
         (void)oppLastMoves;

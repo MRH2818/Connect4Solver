@@ -266,7 +266,7 @@ private:
     }
 
 public:
-    KorfAgent(char playerToken, int playerNumber, vector<char> nextPlayers, int searchDepth = 7)
+    KorfAgent(char playerToken, int playerNumber, const vector<char>& nextPlayers, int searchDepth = 7)
         : Agent(playerToken, playerNumber, nextPlayers), searchDepth(searchDepth) {}
 
     std::vector<int> chooseMove(const Board& board, const vector<vector<int>>& oppLastMoves, bool firstMove=false) override {

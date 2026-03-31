@@ -21,7 +21,7 @@ public:
     int getPlayerNumber() const {
         return playerNumber;
     }
-    Agent(char playerToken, int playerNumber, vector<char> nextPlayers) : token(playerToken), playerNumber(playerNumber), nextPlayers(nextPlayers) {}
+    Agent(char playerToken, int playerNumber, const vector<char>& nextPlayers) : token(playerToken), playerNumber(playerNumber), nextPlayers(nextPlayers) {}
 
     virtual vector<int> chooseMove(const Board& board, const vector<vector<int>>& oppLastMoves, bool firstMove=false) = 0; // Must be overridden
 };

@@ -1,0 +1,10 @@
+GOALS:
+2d game play PLAYER V PLAYER
+2d game play PLAYER V PLAYER V PLAYER
+2d game player PLAYER V ROBOT
+2d game play PLAYER V PLAYER V ROBOT
+
+So before starting the game:
+Add players, for one decide if it'll be a Robot or a Player
+
+

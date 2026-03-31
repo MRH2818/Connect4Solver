@@ -347,7 +347,7 @@ private:
     unsigned int uniqueCacheBucket;
 
 public:
-    MaxNAgent(char playerToken, int playerNumber, vector<char> nextPlayers, int uniqueCacheBucket)
+    MaxNAgent(char playerToken, int playerNumber, const vector<char>& nextPlayers, int uniqueCacheBucket)
         : Agent(playerToken, playerNumber, nextPlayers), uniqueCacheBucket(uniqueCacheBucket) {
             this->streaks = {};
         }
