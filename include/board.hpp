@@ -63,13 +63,13 @@ private:
     std::vector<char> board;
     int size;
     int dimensions;
-    std::vector<std::vector<int>> _directions;
+    std::vector<std::vector<int>> directions;
     // One slot per drop move (size^(dimensions-1)); true while that column still accepts a piece.
     std::vector<bool> availableToPlay;
 
     int lastPlacedIndex;
     std::vector<int> lastPlacedCoords;
-    bool _placedYet = false;
+    bool placedYet = false;
 
     // Sets availableToPlay to numMoves entries, all true.
     void initAvailableToPlay(int numMoves) {
@@ -82,11 +82,11 @@ public:
         : board(other.board),
           size(other.size),
           dimensions(other.dimensions),
-          _directions(other._directions),
+          directions(other.directions),
           availableToPlay(other.availableToPlay),
           lastPlacedIndex(other.lastPlacedIndex),
           lastPlacedCoords(other.lastPlacedCoords),
-          _placedYet(other._placedYet) {}
+          placedYet(other.placedYet) {}
 
     Board(int size, int dimensions=2) {
         if (dimensions < 2) {
@@ -97,7 +97,7 @@ public:
         this->board = std::vector<char>(sizepowdim_m1*size, EMPTY_CHAR);
         this->size = size;
         this->dimensions = dimensions;
-        this->_directions = BoardUtils::getAllDirections(dimensions);
+        this->directions = BoardUtils::getAllDirections(dimensions);
         initAvailableToPlay(sizepowdim_m1);
     }
     // Ensure that length_of_string is equal to size^dimensions. This constructor will not check.
@@ -109,8 +109,8 @@ public:
         this->board = std::vector<char>(str, str + length_of_string);
         this->size = size;
         this->dimensions = dimensions;
-        this->_placedYet = placedYet;
-        this->_directions = BoardUtils::getAllDirections(dimensions);
+        this->placedYet = placedYet;
+        this->directions = BoardUtils::getAllDirections(dimensions);
         initAvailableToPlay(BoardUtils::ipow(size, dimensions - 1));
     }
     
@@ -170,8 +170,8 @@ public:
 
     // addDrop (with a successful result) should be called first
     bool checkWin(char player) const {
-        if (!_placedYet) return false;
-        for (const std::vector<int>& d : this->_directions) {
+        if (!placedYet) return false;
+        for (const std::vector<int>& d : this->directions) {
             int step = this->coordsToIndex(d);
             // Max cells in the +d and -d rays while coords stay in [0, size).
             // (Previously b_steps ignored axes where d[i]==1, so index arithmetic
@@ -241,7 +241,7 @@ public:
                 this->lastPlacedIndex = currentIndex;
                 baseCoords[1] = h;
                 this->lastPlacedCoords = baseCoords;
-                this->_placedYet = true;
+                this->placedYet = true;
 
                 if (h+1 == size) {
                     availableToPlay[dropMoveIndex(coords)] = false;
@@ -282,7 +282,7 @@ public:
         return this->lastPlacedCoords;
     }
     std::vector<std::vector<int>> getDirections() const { // GET ALL DIRECTIONS!
-        return this->_directions;
+        return this->directions;
     }
     std::string toString() const {
         return std::string(board.begin(), board.end());
