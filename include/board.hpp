@@ -9,7 +9,7 @@ const char EMPTY_CHAR = '_';
 namespace BoardUtils {
     int ipow(int a, int b) {
         if (b < 0) {
-            std::cout << ("Exponent must be an integer greater than or equal to zero.\n");
+            std::cout << "Exponent must be an integer greater than or equal to zero.\n";
             exit(1);
         }
         if (b <= 0) return 1;
