@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <script src="js/addplayersdropdown.js" defer></script>
+        <script src="js/formsubmit.js" defer></script>
+    </head>
+    <body>
+        <form id="game-setup-form" action="#" method="post">
+            <h1>Pick a player</h1>
+            <div id="players-container">
+                <!-- PRE-DEFINED PLAYER TILES TO ENFORCE 2 TILE MINIMUM -->
+                <div class="playertile" id="player_1">
+                    <p>Player 1:</p>
+                    <select name="playertype_1">
+                        <option>Human</option>
+                        <option>KorfBot</option>
+                    </select>
+                </div>
+                <div class="playertile" name="playertype" id="player_2">
+                    <p>Player 2:</p>
+                    <select name="playertype_2">
+                        <option>Human</option>
+                        <option>KorfBot</option>
+                    </select>
+                </div>
+            </div>
+            <!-- ADD NEW PLAYERS, NEW PLAYERS SHOULD ALSO HAVE A REMOVE OPTION -->
+            <button type="button" onclick="addPlayer()">Add player</button>
+
+            <!-- SET GAME MODE TO EITHER 2D, 3D, OR 4D+ -->
+            <label for="num-dimensions"><strong>Set number of board dimensions (max 6):</strong></label>
+            <input id="num-dimensions" name="num-dimensions" type="number" min="2" max="6" step="1" value="2" />
+
+            <!-- ON CLICK, HANDLE SUBMISSION IN JAVASCRIPT -->
+            <button type="submit">Play!</button>
+        </form>
+    </body>
+</html>

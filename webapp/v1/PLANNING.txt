@@ -7,4 +7,6 @@ GOALS:
 So before starting the game:
 Add players, for one decide if it'll be a Robot or a Player
 
+SO IN MAIN MENU:
+- player list
 
