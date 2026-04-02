@@ -18,11 +18,17 @@
         });
         keys.forEach(function (key) {
             var n = parseInt(key.replace("playertype_", ""), 10);
-            players.push({ index: n, type: formData.get(key) });
+            players.push({ num: n, type: formData.get(key) });
         });
+
+        var boardSize = Number(formData.get("boardsize"));
+        if (Number.isFinite(boardSize)) {
+            boardSize = Math.min((numDimensions === 2) ? 10 : 7, Math.max(4, Math.round(boardSize)));
+        }
 
         return {
             numDimensions: numDimensions,
+            boardSize: boardSize,
             players: players,
         };
     }
@@ -31,7 +37,25 @@
         var setup = collectSetup(formData);
         console.log("Here's the form data!");
         console.log(JSON.stringify(setup));
-        // END HERE FOR NOW — later: navigate to game or POST to server
+
+        // PREPARE STRING
+        const binstr = encodeOBJtoBASE64_URL(setup);
+        console.log("ENCODED TO:");
+        console.log(binstr);
+
+        console.log("DECODED:")
+        console.log(decodeBASE64_URLtoOBJ(binstr))
+
+        // CHECK DIMENSIONS
+        
+        if (setup.numDimensions === 2) {
+            // BUILD REDIRECT
+            const newurl = `../2dgame/twogame.html?config=${binstr}`;
+            window.location.href = newurl;
+            return setup;
+        }
+
+
         return setup;
     }
     window.handleForm = handleForm;

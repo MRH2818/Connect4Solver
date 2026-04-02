@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <script src="../js/urlencoding.js"></script>
         <script src="js/addplayersdropdown.js" defer></script>
         <script src="js/formsubmit.js" defer></script>
     </head>
@@ -24,12 +25,17 @@
                     </select>
                 </div>
             </div>
+            
             <!-- ADD NEW PLAYERS, NEW PLAYERS SHOULD ALSO HAVE A REMOVE OPTION -->
             <button type="button" onclick="addPlayer()">Add player</button>
 
             <!-- SET GAME MODE TO EITHER 2D, 3D, OR 4D+ -->
             <label for="num-dimensions"><strong>Set number of board dimensions (max 6):</strong></label>
             <input id="num-dimensions" name="num-dimensions" type="number" min="2" max="6" step="1" value="2" />
+
+            <!-- SET BOARD SIZE (MAX 10, 7 for 3D+) -->
+            <label for="board-size"><strong>Set board size (max 10 for 2D, 7 for 3D+):</strong></label>
+            <input id="board-size" name="boardsize" type="number" min="4" max="10" step="1" value="7" />
 
             <!-- ON CLICK, HANDLE SUBMISSION IN JAVASCRIPT -->
             <button type="submit">Play!</button>
