@@ -1,8 +1,12 @@
-#pragma once
+/*
+BUILD COMMAND (run from root directory):
+em++ src/emscripten_bindings/bindings.cpp -Iinclude -Isrc/agents -Isrc/emscripten_bindings -o webapp/v1/js/connect4_utils.js --bind
+em++ src/emscripten_bindings/bindings.cpp -Iinclude -Isrc/agents -Isrc/emscripten_bindings -o webapp/v1/js/connect4_utils.js --bind -sSINGLE_FILE=1 -O2
+*/
 
-#include "board.hpp"
 #include "agent.hpp"
-#include "korf2_iterative.hpp"
+#include "board.hpp"
+#include "../../src/agents/korf2_iterative.hpp"
 #include <emscripten/bind.h>
 
 using namespace emscripten;
