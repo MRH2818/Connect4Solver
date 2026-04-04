@@ -1,16 +1,18 @@
 
 class DrawBoard2D {
-    constructor(boardSize) {        
+    constructor(boardSize,
+        onClick = ((e) => {
+            const col = Math.floor(e.offsetX / (this.canvas.width / this.BOARD_SIZE));
+            console.log(`Registered click at column index ${col}.`);
+        })
+    ) {        
         this.canvas = document.getElementById("boardCanvas");
         this.ctx = this.canvas.getContext('2d');
         this.CIRCLES_PADDING = 10; // padding between opening circles + wall, in pixels
         this.BOARD_SIZE = boardSize; // board size n (number of circles width/tall)
 
         // DETECT CLICKS:
-        this.canvas.addEventListener("click", (e) => {
-            const col = Math.floor(e.offsetX / (this.canvas.width / this.BOARD_SIZE));
-            console.log(`Registered click at column index ${col}.`);
-        })
+        this.canvas.addEventListener("click", onClick);
     }
 
     // DRAW HOLE given center of circle
