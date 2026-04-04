@@ -288,7 +288,7 @@ public:
         return std::string(board.begin(), board.end());
     }
     bool isFull() const {
-        return availableToPlay.size() == BoardUtils::ipow(this->size, this->dimensions);
+        return std::all_of(board.begin(), board.end(), [](char c) { return c != EMPTY_CHAR; });
     }
     bool isEmpty() const {
         return std::all_of(board.begin(), board.end(), [](char c) { return c == EMPTY_CHAR; });
