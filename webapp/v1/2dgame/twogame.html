@@ -1,13 +1,31 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <!-- JAVASCRIPT! -->
         <script src="../js/connect4_utils.js"></script>
-        <script src="js/twoPlayerTest.js" defer></script>
+        <script src="js/2dBoard.js" defer></script>
+        <script src="js/manager.js" defer></script>
+        <!-- <script src="js/twoPlayerTest.js" defer></script> -->
         <!-- <script src="../js/urlencoding.js"></script>
         <script src="js/handle2d.js" defer></script> -->
 
+        <!-- STYLESHEETS! -->
+        <style>
+            body {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            #boardCanvas {
+                background: #0055ff;
+                border-radius: 10px;
+            }
+        </style>
     </head>
     <body>
         <h1>Open console to play 2d game!</h1>
+        <canvas id="boardCanvas" width="600" height="600">
+
+        </canvas>
     </body>
 </html>
