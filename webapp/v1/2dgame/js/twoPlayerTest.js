@@ -1,21 +1,21 @@
 function waitForConnect4Module() {
-    const m = globalThis.Module;
-    if (!m) {
-      return Promise.reject(
-        new Error("connect4_utils.js must load before twoPlayerTest.js")
-      );
-    }
-    if (m.calledRun) {
-      return Promise.resolve(m);
-    }
-    return new Promise((resolve) => {
-      const prev = m.onRuntimeInitialized;
-      m.onRuntimeInitialized = () => {
-        if (typeof prev === "function") prev();
-        resolve(m);
-      };
-    });
+  const m = globalThis.Module;
+  if (!m) {
+    return Promise.reject(
+      new Error("connect4_utils.js must load before twoPlayerTest.js")
+    );
   }
+  if (m.calledRun) {
+    return Promise.resolve(m);
+  }
+  return new Promise((resolve) => {
+    const prev = m.onRuntimeInitialized;
+    m.onRuntimeInitialized = () => {
+      if (typeof prev === "function") prev();
+      resolve(m);
+    };
+  });
+}
 
 
 /** Embind passes C++ `char` as a JS number (ASCII code), not a one-character string. */

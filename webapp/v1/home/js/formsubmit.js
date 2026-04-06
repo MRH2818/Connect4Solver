@@ -16,9 +16,9 @@
             var nb = parseInt(b.replace("playertype_", ""), 10);
             return na - nb;
         });
-        keys.forEach(function (key) {
+        keys.forEach(function (key, idx) {
             var n = parseInt(key.replace("playertype_", ""), 10);
-            players.push({ num: n, type: formData.get(key) });
+            players.push({ num: idx+1, type: formData.get(key) });
         });
 
         var boardSize = Number(formData.get("boardsize"));

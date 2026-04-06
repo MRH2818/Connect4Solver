@@ -47,4 +47,20 @@ function removePlayer(button) {
     if (tiles.length <= 2) return;
 
     tile.remove();
+
+    // SET RENUMBER TILES BELOW (if they exist), i.e. if player 3 is removed, make sure that player 4 is renamed to player 3
+    const remainingTiles = container.querySelectorAll(".playertile");
+    remainingTiles.forEach(function (t, idx) {
+        const playerNumber = idx + 1;
+
+        t.id = "player_" + playerNumber;
+
+        const label = t.querySelector("p");
+        if (label) label.textContent = "Player " + playerNumber + ":";
+
+        const select = t.querySelector("select");
+        if (select) select.name = "playertype_" + playerNumber;
+    });
+
+    nextPlayerNumber = remainingTiles.length + 1;
 }

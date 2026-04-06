@@ -1,6 +1,6 @@
 /*
 BUILD COMMAND (run from root directory):
-em++ src/emscripten_bindings/bindings.cpp -Iinclude -Isrc/agents -Isrc/emscripten_bindings -o webapp/v1/js/connect4_utils.js --bind
+em++ src/emscripten_bindings/bindings.cpp -Iinclude -Isrc/agents -Isrc/emscripten_bindings -o webapp/v1/js/connect4_utils.js --bind -sALLOW_MEMORY_GROWTH
 */
 
 #include "agent.hpp"

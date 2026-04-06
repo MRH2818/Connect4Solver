@@ -8,12 +8,12 @@
 #include "korf2_iterative.hpp"
 
 int main() {
-    const int boardSize = 12;
+    const int boardSize = 7;
     Board brd(boardSize, 2);
 
     const char humanToken = 'X';
     const char agentToken = 'O';
-    Korf2IterativeAgent agent(agentToken, 2, { humanToken }, 12, 5000);
+    Korf2IterativeAgent agent(agentToken, 2, { humanToken }, 12, 2000);
 
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 

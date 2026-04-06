@@ -1,46 +1,68 @@
 
 class DrawBoard2D {
-    constructor(boardSize,
-        onClick = ((e) => {
-            const col = Math.floor(e.offsetX / (this.canvas.width / this.BOARD_SIZE));
-            console.log(`Registered click at column index ${col}.`);
-        })
+    constructor(
+        boardSize,
+        pixelSideLength=500,
+        boardColor="#0055ff",
+        boardCornerRadius="10px"
     ) {        
         this.canvas = document.getElementById("boardCanvas");
+        this.canvas.width = pixelSideLength;
+        this.canvas.height = pixelSideLength;
+        this.canvas.style.backgroundColor = boardColor;
+        this.canvas.style.borderRadius = boardCornerRadius;
+
         this.ctx = this.canvas.getContext('2d');
         this.CIRCLES_PADDING = 10; // padding between opening circles + wall, in pixels
         this.BOARD_SIZE = boardSize; // board size n (number of circles width/tall)
 
-        // DETECT CLICKS:
+        this.cellSize = this.canvas.width / this.BOARD_SIZE;
+        this.holeRadius = (this.cellSize / 2) - this.CIRCLES_PADDING; // Radius of each circle, in pixels
+    }
+    
+    // Set click event handler, default function just prints column clicked
+    setOnClickHandler(onClick = (e) => {
+        const col = Math.floor(e.offsetX / (PIXEL_SIDE_LENGTH / _BOARD_SIZE));
+        console.log(`Registered click at column ${col}.`);
+    }) {
         this.canvas.addEventListener("click", onClick);
     }
 
-    // DRAW HOLE given center of circle
-    drawSingleHole(x, y, radius) {
-        this.ctx.beginPath();
-        this.ctx.arc(x, y, radius, 0, Math.PI*2);
-        
-        this.ctx.fillStyle = "white"; // Empty slot color
-        this.ctx.fill();
-        
-        this.ctx.closePath();
+    // Returns vector [x, y] representing center of cell given board coords row, col
+    boardCoordsToVisualCoords(col, row) {
+        return [this.cellSize*(col+0.5), this.cellSize*((this.BOARD_SIZE - row - 1)+0.5)];
+    }
 
+    // Add drop to x, y coords
+    async addDrop(x, y, fillColor) {
+        let ctx1 = this.canvas.getContext("2d");
+        this.drawSingleHole(x, y, this.holeRadius, fillColor, "rgba(0, 0, 255, 0.2)", 3);
+    }
+
+    // DRAW HOLE given center of circle
+    drawSingleHole(x, y, radius, fillColor="white", strokeStyle="rgba(0, 0, 0, 0.2)", lineWidth=3, loop=this.ctx) {
+        loop.beginPath();
+        loop.arc(x, y, radius, 0, Math.PI*2);
+        
+        loop.fillStyle = fillColor;
+        loop.fill();
+        
         // ADD SOME DEPTH TO HOLES WITH OUTLINE
-        this.ctx.strokeStyle = "rgba(0, 0, 0, 0.2)";
-        this.ctx.lineWidth = 3;
-        this.ctx.stroke();
+        loop.strokeStyle = strokeStyle;
+        loop.lineWidth = lineWidth;
+        loop.stroke();
+
+        loop.closePath();
     }
 
     // DRAWS DOTS OF BOARD OF SIZE n
     drawAllDots() {
         const size = this.canvas.width;
-        const cellSize = size / this.BOARD_SIZE;
-        const radius = (cellSize / 2) - this.CIRCLES_PADDING; // Radius of each circle, in pixels
 
-        console.log("CTX:", this.ctx);
-        console.log("size:", size)
-        console.log("cellSize:", cellSize);
-        console.log("radius:", radius);
+        // console.log("CTX:", this.ctx);
+        // console.log("size:", size)
+        // console.log("cellSize:", this.cellSize);
+        // console.log("radius:", this.holeRadius);
 
         // Clear canvas if full
         this.ctx.clearRect(0, 0, size, size);
@@ -48,11 +70,11 @@ class DrawBoard2D {
         for (let row = 0; row < this.BOARD_SIZE; row++) {
             for (let col = 0; col < this.BOARD_SIZE; col++) {
                 // Calculate center coordinates of current circle
-                const x = cellSize*(col + 0.5);
-                const y = cellSize*(row + 0.5);
+                const x = this.cellSize*(col + 0.5);
+                const y = this.cellSize*(row + 0.5);
                 //console.log(`(${x}, ${y})`)
 
-                this.drawSingleHole(x, y, radius);
+                this.drawSingleHole(x, y, this.holeRadius);
             }
         }
     }
