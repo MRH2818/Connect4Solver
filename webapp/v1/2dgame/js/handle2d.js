@@ -51,8 +51,8 @@ function makeVectorChar(wasm, values) {
         LOADING PARAMETERS  ---------------------------------------
     */
     // reads parameters
-    // { "numDimensions":2,"players":[{"index":1,"type":"KorfBot"},{"index":2,"type":"Human"},{"index":3,"type":"KorfBot"},{"index":4,"type":"Human"}, ...], "boardSize":7 }
-    // 2dgame/twogame.html?config=eyJudW1EaW1lbnNpb25zIjoyLCJwbGF5ZXJzIjpbeyJpbmRleCI6MSwidHlwZSI6Ikh1bWFuIn0seyJpbmRleCI6MiwidHlwZSI6Ikh1bWFuIn1dfQ==
+    // {"numDimensions":2,"boardSize":7,"players":[{"num":1,"type":"Human"},{"num":2,"type":"KorfBot"}, ...]}
+    // 2dgame/twogame.html?config=eyJudW1EaW1lbnNpb25zIjoyLCJib2FyZFNpemUiOjcsInBsYXllcnMiOlt7Im51bSI6MSwidHlwZSI6Ikh1bWFuIn0seyJudW0iOjIsInR5cGUiOiJLb3JmQm90In1dfQ%3D%3D
     const params = new URLSearchParams(window.location.search);
     const configParam = params.get('config');
     let _NUM_DIMENSIONS;
