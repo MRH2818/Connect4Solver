@@ -1,7 +1,6 @@
 /*
 BUILD COMMAND (run from root directory):
 em++ src/emscripten_bindings/bindings.cpp -Iinclude -Isrc/agents -Isrc/emscripten_bindings -o webapp/v1/js/connect4_utils.js --bind
-em++ src/emscripten_bindings/bindings.cpp -Iinclude -Isrc/agents -Isrc/emscripten_bindings -o webapp/v1/js/connect4_utils.js --bind -sSINGLE_FILE=1 -O2
 */
 
 #include "agent.hpp"
@@ -45,6 +44,7 @@ EMSCRIPTEN_BINDINGS(connect4_module) {
         .function("getCell", &Board::getCell)
         .function("getLastMoveIndex", &Board::getLastMoveIndex)
         .function("getLastMoveCoords", &Board::getLastMoveCoords)
+        .function("getLastMoveHeight", &Board::getLastMoveHeight)
         .function("getDirections", &Board::getDirections)
         .function("toString", &Board::toString)
         .function("isFull", &Board::isFull)
