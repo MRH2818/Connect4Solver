@@ -281,6 +281,9 @@ public:
     std::vector<int> getLastMoveCoords() const { // Get coords of last move
         return this->lastPlacedCoords;
     }
+    int getLastMoveHeight() const { // Returns this->lastPlacedCoords[1] (used in web build)
+        return this->lastPlacedCoords[1];
+    }
     std::vector<std::vector<int>> getDirections() const { // GET ALL DIRECTIONS!
         return this->directions;
     }
