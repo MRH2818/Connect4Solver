@@ -13,10 +13,10 @@ class DrawBoard2D {
         this.canvas.style.borderRadius = boardCornerRadius;
 
         this.ctx = this.canvas.getContext('2d');
-        this.CIRCLES_PADDING = 10; // padding between opening circles + wall, in pixels
         this.BOARD_SIZE = boardSize; // board size n (number of circles width/tall)
-
+        
         this.cellSize = this.canvas.width / this.BOARD_SIZE;
+        this.CIRCLES_PADDING = 0.1 * this.cellSize; // padding between opening circles + wall, in pixels
         this.holeRadius = (this.cellSize / 2) - this.CIRCLES_PADDING; // Radius of each circle, in pixels
     }
     

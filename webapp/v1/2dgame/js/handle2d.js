@@ -60,7 +60,7 @@ function makeVectorChar(wasm, values) {
     let players;
     // Agent thinking settings:
     const AGENT_MAX_DEPTH = 15;
-    const AGENT_THOUGHT_CAP_MS = 5000;
+    const AGENT_THOUGHT_CAP_MS = 3000;
     // Board UI look:
     const PIXEL_SIDE_LENGTH = 600;
 
