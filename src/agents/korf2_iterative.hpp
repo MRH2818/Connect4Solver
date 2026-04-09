@@ -460,10 +460,17 @@ private:
         return iteration;
     }
 
+    SearchResult lastBestResult;
+
 public:
     Korf2IterativeAgent(
         char playerToken, int playerNumber, const vector<char>& nextPlayers, int searchDepth = 7, int timeLimitMs = 3000)
         : Agent(playerToken, playerNumber, nextPlayers), searchDepth(searchDepth), timeLimitMs(timeLimitMs) {}
+
+    
+    float getLastBestResult(char token) {
+        return lastBestResult.scores[token];
+    }
 
     vector<int> chooseMove(const Board& board, const vector<vector<int>>& oppLastMoves, bool firstMove = false) override {
         (void)oppLastMoves;
@@ -529,6 +536,9 @@ public:
         logLine(0, "Selected move: " + moveToString(availableMoves[bestResult.bestMoveIndex]) +
             " | score: " + std::to_string(bestResult.scores[this->getToken()]));
         logLine(0, "============ KORF2 ITERATIVE THINK END ===========");
+
+        
+        this->lastBestResult = bestResult;
 
         return availableMoves[bestResult.bestMoveIndex];
     }

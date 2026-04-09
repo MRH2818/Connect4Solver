@@ -60,7 +60,7 @@ function makeVectorChar(wasm, values) {
     let players;
     // Agent thinking settings:
     const AGENT_MAX_DEPTH = 15;
-    const AGENT_THOUGHT_CAP_MS = 3000;
+    const AGENT_THOUGHT_CAP_MS = 1000;
     // Board UI look:
     const PIXEL_SIDE_LENGTH = 600;
 
@@ -148,6 +148,11 @@ function makeVectorChar(wasm, values) {
             oppLastMoves.push_back(val);
         });
         let move = players[turn].agent.chooseMove(wasmBoard, oppLastMoves, lastMoves.length === 0);
+
+        // PRINT EVALUATION TO CONSOLE:
+        players.forEach((p, idx) => {
+            console.log(`Player ${p.num} eval: ${players[turn].agent.getLastBestResult(wasmChar(playerTokens[idx]))}`);
+        });
 
         // DEFENSIVE: if agent returns an illegal move (shouldn't happen), make a console error
         let placed = false;
