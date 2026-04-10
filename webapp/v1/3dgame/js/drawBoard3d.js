@@ -1,3 +1,15 @@
+const THREE_VERSION_URL = "https://cdn.jsdelivr.net/npm/three@0.160.0/+esm";
+let THREE = globalThis.THREE;
+
+async function ensureThreeLoaded() {
+    if (!THREE) {
+        THREE = await import(THREE_VERSION_URL);
+        globalThis.THREE = THREE;
+    }
+
+    return THREE;
+}
+
 class DrawBoard3D {
     constructor(
         boardSize,
@@ -215,13 +227,15 @@ window.DrawBoard3D = DrawBoard3D;
 // Example usage/test for DrawBoard3D:
 // (Uncomment to use in a page with a canvas#boardCanvas and loaded THREE.js)
 //
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", async () => {
+    await ensureThreeLoaded();
+
     const board = new DrawBoard3D(7);
     board.setOnClickHandler(({ dropCoords }) => {
         if (dropCoords) {
             // Random color for demo
             const color = ["red", "yellow", "green", "blue"][Math.floor(Math.random() * 4)];
-            board.drawPiece(dropCoords[0], 0, dropCoords[1], color);
+            board.addDrop(dropCoords[0], 0, dropCoords[1], color);
         }
     });
 });
