@@ -153,7 +153,7 @@ class DrawBoard3D {
     }
 
     _buildHoverPreview() {
-        const topY = this.boardOffset.y + (this.BOARD_SIZE - 1) * this.cellSpacing;// + this.cellRadius * 1.05;
+        const topY = this.boardOffset.y + (this.BOARD_SIZE - 1) * this.cellSpacing + this.cellRadius;
         this.hoverPreview = new THREE.Group();
         this.hoverPreview.visible = false;
         this.hoverPreview.renderOrder = 1;
@@ -236,6 +236,7 @@ class DrawBoard3D {
             metalness: 0.05,
             transparent: true,
             opacity: 0.18,
+            //depthTest: false
         });
 
         const holeGeo = new THREE.SphereGeometry(this.cellRadius * 0.72, 14, 14);
