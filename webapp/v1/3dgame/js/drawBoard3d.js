@@ -67,6 +67,7 @@ class DrawBoard3D {
         this._hoverTarget = null;
         this._hoverHandler = () => {};
         this._hoverEventsBound = false;
+        this._landingYResolver = null;
 
         this._buildLights();
         this._buildBoardFrame();
@@ -84,6 +85,10 @@ class DrawBoard3D {
             const dropCoords = this._extractDropCoords(hoverResult);
             onClick({ ...e, dropCoords });
         });
+    }
+
+    setLandingHeightResolver(resolver) {
+        this._landingYResolver = typeof resolver === "function" ? resolver : null;
     }
 
     setOnHoverHandler(onHover = (evt) => {
@@ -152,7 +157,7 @@ class DrawBoard3D {
         this.boardRoot.add(wire);
     }
 
-    _buildHoverPreview() {
+    _buildHoverPreview(pieceFillColor) {
         const topY = this.boardOffset.y + (this.BOARD_SIZE - 1) * this.cellSpacing + this.cellRadius;
         this.hoverPreview = new THREE.Group();
         this.hoverPreview.visible = false;
@@ -163,7 +168,7 @@ class DrawBoard3D {
             new THREE.MeshBasicMaterial({
                 color: 0x9cd3ff,
                 transparent: true,
-                opacity: 0.95,
+                opacity: 0.7,
                 depthTest: false,
                 depthWrite: false,
             })
@@ -172,6 +177,11 @@ class DrawBoard3D {
         ring.position.y = topY;
         ring.renderOrder = 1;
         this.hoverPreview.add(ring);
+
+        this.hoverGhost = this._getPieceMesh(0, 0, 0, 0x9cd3ff, true);
+        this.hoverGhost.visible = false;
+        this.hoverGhost.renderOrder = 1;
+        this.hoverPreview.add(this.hoverGhost);
 
         this.boardRoot.add(this.hoverPreview);
     }
@@ -255,7 +265,21 @@ class DrawBoard3D {
         this.render();
     }
 
-    addDrop(x, y, z, fillColor) {
+    _getPieceMesh(x, y, z, fillColor, ghost = false) {
+        const piece = new THREE.Mesh(
+            new THREE.SphereGeometry(this.cellRadius, 20, 20),
+            new THREE.MeshStandardMaterial({
+                color: new THREE.Color(fillColor || "white"),
+                roughness: 0.28,
+                metalness: 0.25,
+                ...(ghost ? { transparent: true, opacity: 0.5, depthTest: false } : {}),
+            })
+        );
+        piece.position.copy(this.boardCoordsToWorldCoords(x, y, z));
+        return piece;
+    }
+
+    addDrop(x, y, z, fillColor, ghost=false) {
         if (Array.isArray(x)) {
             [x, y, z, fillColor] = [x[0], x[1], x[2], y];
         }
@@ -267,16 +291,7 @@ class DrawBoard3D {
             this._pieceByKey.delete(key);
         }
 
-        const piece = new THREE.Mesh(
-            new THREE.SphereGeometry(this.cellRadius, 20, 20),
-            new THREE.MeshStandardMaterial({
-                color: new THREE.Color(fillColor || "white"),
-                roughness: 0.28,
-                metalness: 0.25,
-            })
-        );
-
-        piece.position.copy(this.boardCoordsToWorldCoords(x, y, z));
+        const piece = this._getPieceMesh(x, y, z, fillColor, ghost);
         this.boardRoot.add(piece);
         this._pieceByKey.set(key, piece);
         this.render();
@@ -311,6 +326,9 @@ class DrawBoard3D {
         this._hoverTarget = normalized;
         if (!normalized.inBounds) {
             this.hoverPreview.visible = false;
+            if (this.hoverGhost) {
+                this.hoverGhost.visible = false;
+            }
             this.render();
             return;
         }
@@ -318,6 +336,19 @@ class DrawBoard3D {
         const world = this.boardCoordsToWorldCoords(normalized.x, 0, normalized.z);
         this.hoverPreview.position.set(world.x, 0, world.z);
         this.hoverPreview.visible = true;
+
+        if (this.hoverGhost && this._landingYResolver) {
+            const y = this._landingYResolver(normalized.x, normalized.z);
+            if (y == null) {
+                this.hoverGhost.visible = false;
+            } else {
+                this.hoverGhost.visible = true;
+                this.hoverGhost.position.set(0, this.boardOffset.y + y * this.cellSpacing, 0);
+            }
+        } else if (this.hoverGhost) {
+            this.hoverGhost.visible = false;
+        }
+
         this.render();
     }
 

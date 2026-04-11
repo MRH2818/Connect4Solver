@@ -81,7 +81,24 @@ function makeVectorChar(wasm, values) {
     const wasmBoard = new wasm.Board(boardSize, 3);
 
     const visualBoard = new DrawBoard3D(boardSize);
+    window.visualBoard = visualBoard; // FOR DEBUGGING THROUGH CONSOLE
+
     visualBoard.drawAllDots();
+
+    const landingYForColumn = (x, z) => {
+        const empty = wasmChar("_");
+        const size = wasmBoard.getSize();
+        for (let y = 0; y < size; y++) {
+            const coords = makeVectorInt(wasm, [x, y, z]);
+            const idx = wasmBoard.coordsToIndex(coords);
+            coords.delete?.();
+            if (wasmBoard.getCell(idx) === empty) {
+                return y;
+            }
+        }
+        return null;
+    };
+    visualBoard.setLandingHeightResolver(landingYForColumn);
 
     // Agent thinking settings:
     const AGENT_MAX_DEPTH = 15;
