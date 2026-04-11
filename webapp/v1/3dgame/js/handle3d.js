@@ -81,7 +81,7 @@ function makeVectorChar(wasm, values) {
     const wasmBoard = new wasm.Board(boardSize, 3);
 
     const visualBoard = new DrawBoard3D(boardSize);
-    window.visualBoard = visualBoard; // FOR DEBUGGING THROUGH CONSOLE
+    window.visualBoard = visualBoard; /* FOR DEBUGGING THROUGH CONSOLE */
 
     visualBoard.drawAllDots();
 

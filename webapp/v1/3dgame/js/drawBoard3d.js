@@ -168,7 +168,7 @@ class DrawBoard3D {
             new THREE.MeshBasicMaterial({
                 color: 0x9cd3ff,
                 transparent: true,
-                opacity: 0.7,
+                opacity: 1,
                 depthTest: false,
                 depthWrite: false,
             })
@@ -272,7 +272,7 @@ class DrawBoard3D {
                 color: new THREE.Color(fillColor || "white"),
                 roughness: 0.28,
                 metalness: 0.25,
-                ...(ghost ? { transparent: true, opacity: 0.5, depthTest: false } : {}),
+                ...(ghost ? { transparent: true, opacity: 0.7, depthTest: false } : {}),
             })
         );
         piece.position.copy(this.boardCoordsToWorldCoords(x, y, z));
