@@ -63,6 +63,7 @@ class DrawBoard3D {
         };
 
         this._pieceByKey = new Map();
+        this._ghostDrop = null;
         this._boardColor = boardColor;
         this._hoverTarget = null;
         this._hoverHandler = () => {};
@@ -279,6 +280,82 @@ class DrawBoard3D {
         piece.position.copy(this.boardCoordsToWorldCoords(x, y, z));
         this.boardRoot.add(piece);
         this._pieceByKey.set(key, piece);
+        this.clearGhostDrop();
+        this.render();
+    }
+
+    setGhostDrop(x, y, z, color, isValid = true) {
+        this.clearGhostDrop();
+
+        if (!Number.isInteger(x) || !Number.isInteger(y) || !Number.isInteger(z)) {
+            return;
+        }
+
+        const targetKey = `${x},${y},${z}`;
+        const conflictsWithPiece = this._pieceByKey.has(targetKey);
+        const showAsValid = isValid && !conflictsWithPiece;
+
+        const ghostGroup = new THREE.Group();
+        ghostGroup.renderOrder = 2;
+
+        const ghost = new THREE.Mesh(
+            new THREE.SphereGeometry(this.cellRadius, 18, 18),
+            new THREE.MeshStandardMaterial({
+                color: new THREE.Color(showAsValid ? (color || "white") : "#ff4d4d"),
+                transparent: true,
+                opacity: showAsValid ? 0.5 : 0.2,
+                roughness: 0.3,
+                metalness: 0.15,
+                depthWrite: false,
+            })
+        );
+        ghost.renderOrder = 2;
+        ghostGroup.add(ghost);
+
+        if (!showAsValid) {
+            const crossMat = new THREE.LineBasicMaterial({
+                color: 0xff4d4d,
+                transparent: true,
+                opacity: 0.95,
+                depthTest: false,
+            });
+            const crossSize = this.cellRadius * 1.55;
+
+            const diagA = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(-crossSize / 2, -crossSize / 2, 0),
+                new THREE.Vector3(crossSize / 2, crossSize / 2, 0),
+            ]);
+            const diagB = new THREE.BufferGeometry().setFromPoints([
+                new THREE.Vector3(-crossSize / 2, crossSize / 2, 0),
+                new THREE.Vector3(crossSize / 2, -crossSize / 2, 0),
+            ]);
+            const crossA = new THREE.Line(diagA, crossMat);
+            const crossB = new THREE.Line(diagB, crossMat);
+            crossA.renderOrder = 3;
+            crossB.renderOrder = 3;
+            crossA.position.z = this.cellRadius + 0.01;
+            crossB.position.z = this.cellRadius + 0.01;
+            ghostGroup.add(crossA);
+            ghostGroup.add(crossB);
+        }
+
+        const world = this.boardCoordsToWorldCoords(x, y, z);
+        if (conflictsWithPiece) {
+            world.y += this.cellRadius * 0.45;
+        }
+        ghostGroup.position.copy(world);
+        this.boardRoot.add(ghostGroup);
+        this._ghostDrop = ghostGroup;
+        this.render();
+    }
+
+    clearGhostDrop() {
+        if (!this._ghostDrop) {
+            return;
+        }
+
+        this.boardRoot.remove(this._ghostDrop);
+        this._ghostDrop = null;
         this.render();
     }
 

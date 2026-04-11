@@ -90,6 +90,7 @@ function makeVectorChar(wasm, values) {
     let turn = 0;
     let gameOver = false;
     const lastMoves = [];
+    const stackHeights = new Map();
 
     const allColors = ["red", "yellow", "orange", "green", "purple", "brown", "black", "maroon", "cyan", "pink", "gray", "rgb(106, 84, 12)"];
     const playerTokens = [];
@@ -144,6 +145,12 @@ function makeVectorChar(wasm, values) {
         }
     };
 
+    const stackKey = (x, z) => `${x},${z}`;
+    const getNextStackY = (x, z) => stackHeights.get(stackKey(x, z)) ?? 0;
+    const updateStackHeightFromPlacement = (x, z, y) => {
+        stackHeights.set(stackKey(x, z), y + 1);
+    };
+
     const botThink = () => {
         if (gameOver || !players[turn].isBot) {
             return;
@@ -175,6 +182,7 @@ function makeVectorChar(wasm, values) {
         const x = move.get(0);
         const z = move.get(1);
         const y = wasmBoard.getLastMoveHeight();
+        updateStackHeightFromPlacement(x, z, y);
         visualBoard.addDrop(x, y, z, playerColors[turn]);
         lastMoves.push(move);
 
@@ -200,12 +208,24 @@ function makeVectorChar(wasm, values) {
         }
 
         const y = wasmBoard.getLastMoveHeight();
+        updateStackHeightFromPlacement(x, z, y);
         visualBoard.addDrop(x, y, z, playerColors[turn]);
         lastMoves.push(move);
         finishTurnOrEnd();
     };
     
-    visualBoard.setOnHoverHandler(() => {});
+    visualBoard.setOnHoverHandler(({ hoverCoords }) => {
+        if (!hoverCoords?.inBounds || gameOver) {
+            visualBoard.clearGhostDrop();
+            return;
+        }
+
+        const { x, z } = hoverCoords;
+        const nextY = getNextStackY(x, z);
+        const isValid = nextY < boardSize;
+        const ghostY = isValid ? nextY : (boardSize - 1);
+        visualBoard.setGhostDrop(x, ghostY, z, playerColors[turn], isValid);
+    });
 
     visualBoard.setOnClickHandler(({ dropCoords }) => {
         if (!dropCoords) {
