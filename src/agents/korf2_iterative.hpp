@@ -471,6 +471,9 @@ public:
     float getLastBestResult(char token) {
         return lastBestResult.scores[token];
     }
+    int getLastSearchDepth() const {
+        return lastBestResult.depthSearched;
+    }
 
     vector<int> chooseMove(const Board& board, const vector<vector<int>>& oppLastMoves, bool firstMove = false) override {
         (void)oppLastMoves;

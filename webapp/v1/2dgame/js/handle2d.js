@@ -150,6 +150,7 @@ function makeVectorChar(wasm, values) {
         let move = players[turn].agent.chooseMove(wasmBoard, oppLastMoves, lastMoves.length === 0);
 
         // PRINT EVALUATION TO CONSOLE:
+        console.log("Depth searched:", players[turn].agent.getLastSearchDepth())
         players.forEach((p, idx) => {
             console.log(`Player ${p.num} eval: ${players[turn].agent.getLastBestResult(wasmChar(playerTokens[idx]))}`);
         });

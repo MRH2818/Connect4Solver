@@ -83,6 +83,10 @@ function makeVectorChar(wasm, values) {
     const visualBoard = new DrawBoard3D(boardSize);
     visualBoard.drawAllDots();
 
+    // Agent thinking settings:
+    const AGENT_MAX_DEPTH = 15;
+    const AGENT_THOUGHT_CAP_MS = 1000;
+
     let turn = 0;
     let gameOver = false;
     const lastMoves = [];
@@ -97,15 +101,86 @@ function makeVectorChar(wasm, values) {
         playerColors.push(allColors[i % allColors.length]);
     }
 
-    // Keep helper in active use to mirror 2D shape and embind type expectation.
-    makeVectorChar(wasm, playerTokens).delete?.();
+    for (let i = 0; i < players.length; i++) {
+        if (players[i].type === "KorfBot") {
+            const nextPlayers = makeVectorChar(wasm, [...playerTokens.slice(i + 1), ...playerTokens.slice(0, i)]);
+
+            players[i].agent = new wasm.Korf2IterativeAgent(
+                wasmChar(playerTokens[i]),
+                players[i].num ?? (i + 1),
+                nextPlayers,
+                AGENT_MAX_DEPTH,
+                AGENT_THOUGHT_CAP_MS
+            );
+            players[i].isBot = true;
+        } else {
+            players[i].isBot = false;
+        }
+    }
 
     const updateTurnStatus = () => {
         statusDiv.innerHTML = `Player ${players[turn].num}'s turn: (${(players[turn].type || "Human").toUpperCase()}).`;
     };
 
+    const finishTurnOrEnd = () => {
+        if (wasmBoard.checkWin(wasmChar(playerTokens[turn]))) {
+            statusDiv.innerHTML = `Player ${players[turn].num} wins!`;
+            gameOver = true;
+            return;
+        }
+
+        if (wasmBoard.isFull()) {
+            statusDiv.innerHTML = "Game is a draw!";
+            gameOver = true;
+            return;
+        }
+
+        turn = (turn + 1) % players.length;
+        updateTurnStatus();
+        if (players[turn].isBot) {
+            statusDiv.innerHTML += "<br>Thinking...";
+            setTimeout(botThink, 0);
+        }
+    };
+
+    const botThink = () => {
+        if (gameOver || !players[turn].isBot) {
+            return;
+        }
+
+        const oppLastMoves = new wasm.VectorVectorInt();
+        const recentOppMoves = lastMoves.slice(Math.max(0, lastMoves.length - (players.length - 1)));
+        recentOppMoves.forEach((val) => {
+            oppLastMoves.push_back(val);
+        });
+
+        const move = players[turn].agent.chooseMove(wasmBoard, oppLastMoves, lastMoves.length === 0);
+
+        let placed = false;
+        if (move && typeof move.size === "function" && move.size() > 0) {
+            placed = wasmBoard.addDrop(move, wasmChar(playerTokens[turn]));
+        }
+        if (!placed) {
+            statusDiv.innerHTML = "Internal error: bot produced no legal moves.";
+            gameOver = true;
+            return;
+        }
+
+        const x = move.get(0);
+        const z = move.get(1);
+        const y = wasmBoard.getLastMoveHeight();
+        visualBoard.addDrop(x, y, z, playerColors[turn]);
+        lastMoves.push(move);
+
+        finishTurnOrEnd();
+    };
+
     const handleMoveAt = (x, z) => {
         if (gameOver) {
+            return;
+        }
+        if (players[turn].isBot) {
+            statusDiv.innerHTML = `Player ${players[turn].num}'s turn: (${players[turn].type.toUpperCase()}).<br>Wait! The bot is thinking!`;
             return;
         }
 
@@ -121,21 +196,7 @@ function makeVectorChar(wasm, values) {
         const y = wasmBoard.getLastMoveHeight();
         visualBoard.addDrop(x, y, z, playerColors[turn]);
         lastMoves.push(move);
-
-        if (wasmBoard.checkWin(wasmChar(playerTokens[turn]))) {
-            statusDiv.innerHTML = `Player ${players[turn].num} wins!`;
-            gameOver = true;
-            return;
-        }
-
-        if (wasmBoard.isFull()) {
-            statusDiv.innerHTML = "Game is a draw!";
-            gameOver = true;
-            return;
-        }
-
-        turn = (turn + 1) % players.length;
-        updateTurnStatus();
+        finishTurnOrEnd();
     };
 
     visualBoard.setOnClickHandler(({ dropCoords }) => {
@@ -148,5 +209,8 @@ function makeVectorChar(wasm, values) {
     });
 
     updateTurnStatus();
+    if (players[turn].isBot) {
+        statusDiv.innerHTML += "<br>Thinking...";
+        setTimeout(botThink, 0);
+    }
 })();
-
