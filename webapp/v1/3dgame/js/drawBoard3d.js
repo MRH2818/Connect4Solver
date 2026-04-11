@@ -1,10 +1,18 @@
 const THREE_VERSION_URL = "https://cdn.jsdelivr.net/npm/three@0.160.0/+esm";
+const ORBIT_CONTROLS_URL = "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js";
 let THREE = globalThis.THREE;
+let OrbitControlsCtor = globalThis.OrbitControls;
 
 async function ensureThreeLoaded() {
     if (!THREE) {
         THREE = await import(THREE_VERSION_URL);
         globalThis.THREE = THREE;
+    }
+
+    if (!OrbitControlsCtor) {
+        const controlsModule = await import(ORBIT_CONTROLS_URL);
+        OrbitControlsCtor = controlsModule.OrbitControls;
+        globalThis.OrbitControls = OrbitControlsCtor;
     }
 
     return THREE;
@@ -59,6 +67,7 @@ class DrawBoard3D {
 
         this._buildLights();
         this._buildBoardFrame();
+        this._setupControls();
         this.drawAllDots();
         this.render();
     }
@@ -91,11 +100,11 @@ class DrawBoard3D {
         const depth = this.BOARD_SIZE + 0.7;
 
         const frameMat = new THREE.MeshStandardMaterial({
-            color: this._boardColor,
+            color: "white",//this._boardColor,
             roughness: 0.55,
             metalness: 0.15,
             transparent: true,
-            opacity: 0.75,
+            opacity: 0,
         });
 
         const frame = new THREE.Mesh(
@@ -111,6 +120,36 @@ class DrawBoard3D {
         );
         wire.position.copy(frame.position);
         this.boardRoot.add(wire);
+    }
+
+    _setupControls() {
+        if (!OrbitControlsCtor) {
+            return;
+        }
+
+        this.canvas.addEventListener("contextmenu", (evt) => evt.preventDefault());
+        this.controls = new OrbitControlsCtor(this.camera, this.canvas);
+        this.controls.enableDamping = false;
+
+        
+        this.controls.zoomSpeed = 3;
+        this.controls.target.set(0, this.BOARD_SIZE * 0.45, 0);
+        this.controls.screenSpacePanning = true;
+        this.controls.minZoom = this.BOARD_SIZE * 1;
+        this.controls.maxZoom = this.BOARD_SIZE * 3;
+
+        this.controls.maxDistance = this.BOARD_SIZE * 5;
+
+        this.controls.mouseButtons = {
+            LEFT: THREE.MOUSE.ROTATE,
+            MIDDLE: THREE.MOUSE.DOLLY,
+            RIGHT: THREE.MOUSE.PAN,
+        };
+        this.controls.touches = {
+            ONE: THREE.TOUCH.ROTATE,
+            TWO: THREE.TOUCH.DOLLY_PAN,
+        };
+        this.controls.addEventListener("change", () => this.render());
     }
 
     boardCoordsToWorldCoords(x, y, z) {
@@ -193,6 +232,9 @@ class DrawBoard3D {
     }
 
     render() {
+        // if (this.controls) {
+        //     this.controls.update();
+        // }
         this.renderer.render(this.scene, this.camera);
     }
 
@@ -223,21 +265,23 @@ class DrawBoard3D {
 }
 
 window.DrawBoard3D = DrawBoard3D;
+window.ensureThreeLoaded = ensureThreeLoaded;
 
 // Example usage/test for DrawBoard3D:
 // (Uncomment to use in a page with a canvas#boardCanvas and loaded THREE.js)
 //
-document.addEventListener("DOMContentLoaded", async () => {
-    await ensureThreeLoaded();
+// document.addEventListener("DOMContentLoaded", async () => {
+//     await ensureThreeLoaded();
 
-    const board = new DrawBoard3D(7);
-    board.setOnClickHandler(({ dropCoords }) => {
-        if (dropCoords) {
-            // Random color for demo
-            const color = ["red", "yellow", "green", "blue"][Math.floor(Math.random() * 4)];
-            board.addDrop(dropCoords[0], 0, dropCoords[1], color);
-        }
-    });
-});
+//     const board = new DrawBoard3D(7);
+
+//     board.setOnClickHandler(({ dropCoords }) => {
+//         if (dropCoords) {
+//             // Random color for demo
+//             const color = ["red", "yellow", "green", "blue"][Math.floor(Math.random() * 4)];
+//             board.addDrop(dropCoords[0], 0, dropCoords[1], color);
+//         }
+//     });
+// });
 //
 // To use: ensure THREE.js is loaded and there is a <canvas id="boardCanvas"></canvas> on your HTML page.
