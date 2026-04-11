@@ -54,6 +54,7 @@ EMSCRIPTEN_BINDINGS(connect4_module) {
     // AI AGENT
     // ===============================
     class_<Korf2IterativeAgent, base<Agent>>("Korf2IterativeAgent")
+        .constructor<char, int, const std::vector<char>&, int, int>()
         .constructor<char, int, const std::vector<char>&, int, int, int>()
         .function("getLastBestResult", &Korf2IterativeAgent::getLastBestResult)
         .function("getLastSearchDepth", &Korf2IterativeAgent::getLastSearchDepth)

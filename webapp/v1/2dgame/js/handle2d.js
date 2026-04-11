@@ -122,7 +122,7 @@ function makeVectorChar(wasm, values) {
                 players[i].num ?? (i + 1),
                 nextPlayers,
                 AGENT_MAX_DEPTH,
-                AGENT_THOUGHT_CAP_MS
+                AGENT_THOUGHT_CAP_MS,4
             );
             players[i].isBot = true;
         } else {

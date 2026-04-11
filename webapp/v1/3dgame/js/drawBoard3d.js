@@ -64,9 +64,13 @@ class DrawBoard3D {
 
         this._pieceByKey = new Map();
         this._boardColor = boardColor;
+        this._hoverTarget = null;
+        this._hoverHandler = () => {};
+        this._hoverEventsBound = false;
 
         this._buildLights();
         this._buildBoardFrame();
+        this._buildHoverPreview();
         this._setupControls();
         this.drawAllDots();
         this.render();
@@ -76,9 +80,35 @@ class DrawBoard3D {
         console.log("Clicked:", evt.dropCoords);
     }) {
         this.canvas.addEventListener("click", (e) => {
-            const dropCoords = this.getDropCoordinatesFromEvent(e);
+            const hoverResult = this._hoverTarget ?? this.getDropCoordinatesFromEvent(e);
+            const dropCoords = this._extractDropCoords(hoverResult);
             onClick({ ...e, dropCoords });
         });
+    }
+
+    setOnHoverHandler(onHover = (evt) => {
+        console.log("Hover:", evt.hoverCoords);
+    }) {
+        this._hoverHandler = onHover;
+        if (this._hoverEventsBound) {
+            return;
+        }
+
+        this.canvas.addEventListener("pointermove", (e) => {
+            const hoverCoords = this.getDropCoordinatesFromEvent(e);
+            this._setHoverTarget(hoverCoords);
+            this._hoverHandler({ ...e, hoverCoords });
+        });
+
+        this.canvas.addEventListener("pointerleave", (e) => {
+            this._clearHoverTarget();
+            this._hoverHandler({
+                ...e,
+                hoverCoords: { x: null, z: null, inBounds: false },
+            });
+        });
+
+        this._hoverEventsBound = true;
     }
 
     _buildLights() {
@@ -120,6 +150,30 @@ class DrawBoard3D {
         );
         wire.position.copy(frame.position);
         this.boardRoot.add(wire);
+    }
+
+    _buildHoverPreview() {
+        const topY = this.boardOffset.y + (this.BOARD_SIZE - 1) * this.cellSpacing;// + this.cellRadius * 1.05;
+        this.hoverPreview = new THREE.Group();
+        this.hoverPreview.visible = false;
+        this.hoverPreview.renderOrder = 1;
+
+        const ring = new THREE.Mesh(
+            new THREE.TorusGeometry(this.cellRadius * 0.95, 0.05, 12, 32),
+            new THREE.MeshBasicMaterial({
+                color: 0x9cd3ff,
+                transparent: true,
+                opacity: 0.95,
+                depthTest: false,
+                depthWrite: false,
+            })
+        );
+        ring.rotation.x = Math.PI / 2;
+        ring.position.y = topY;
+        ring.renderOrder = 1;
+        this.hoverPreview.add(ring);
+
+        this.boardRoot.add(this.hoverPreview);
     }
 
     _setupControls() {
@@ -231,10 +285,46 @@ class DrawBoard3D {
         this.render();
     }
 
+    _extractDropCoords(hoverResult) {
+        if (!hoverResult?.inBounds) {
+            return null;
+        }
+        return [hoverResult.x, hoverResult.z];
+    }
+
+    _setHoverTarget(nextHoverTarget) {
+        const normalized = nextHoverTarget?.inBounds
+            ? { x: nextHoverTarget.x, z: nextHoverTarget.z, inBounds: true }
+            : { x: null, z: null, inBounds: false };
+
+        const prev = this._hoverTarget;
+        const unchanged =
+            prev?.inBounds === normalized.inBounds &&
+            prev?.x === normalized.x &&
+            prev?.z === normalized.z;
+
+        if (unchanged) {
+            return;
+        }
+
+        this._hoverTarget = normalized;
+        if (!normalized.inBounds) {
+            this.hoverPreview.visible = false;
+            this.render();
+            return;
+        }
+
+        const world = this.boardCoordsToWorldCoords(normalized.x, 0, normalized.z);
+        this.hoverPreview.position.set(world.x, 0, world.z);
+        this.hoverPreview.visible = true;
+        this.render();
+    }
+
+    _clearHoverTarget() {
+        this._setHoverTarget({ x: null, z: null, inBounds: false });
+    }
+
     render() {
-        // if (this.controls) {
-        //     this.controls.update();
-        // }
         this.renderer.render(this.scene, this.camera);
     }
 
@@ -250,17 +340,17 @@ class DrawBoard3D {
         const worldHit = new THREE.Vector3();
 
         if (!this.raycaster.ray.intersectPlane(hitPlane, worldHit)) {
-            return null;
+            return { x: null, z: null, inBounds: false };
         }
 
         const x = Math.round((worldHit.x - this.boardOffset.x) / this.cellSpacing);
         const z = Math.round((worldHit.z - this.boardOffset.z) / this.cellSpacing);
 
         if (x < 0 || x >= this.BOARD_SIZE || z < 0 || z >= this.BOARD_SIZE) {
-            return null;
+            return { x, z, inBounds: false };
         }
 
-        return [x, z];
+        return { x, z, inBounds: true };
     }
 }
 

@@ -43,11 +43,7 @@
         console.log("ENCODED TO:");
         console.log(binstr);
 
-        console.log("DECODED:")
-        console.log(decodeBASE64_URLtoOBJ(binstr))
-
         // CHECK DIMENSIONS
-        
         if (setup.numDimensions === 2) {
             // BUILD REDIRECT
             const newurl = `../2dgame/twogame.html?config=${binstr}`;

@@ -204,6 +204,8 @@ function makeVectorChar(wasm, values) {
         lastMoves.push(move);
         finishTurnOrEnd();
     };
+    
+    visualBoard.setOnHoverHandler(() => {});
 
     visualBoard.setOnClickHandler(({ dropCoords }) => {
         if (!dropCoords) {
