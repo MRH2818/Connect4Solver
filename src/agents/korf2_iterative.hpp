@@ -75,6 +75,7 @@ private:
 
     int searchDepth;
     int timeLimitMs;
+    int minDepth;
     int cachedBoardSize = -1;
     int cachedDimensions = -1;
 
@@ -318,7 +319,8 @@ private:
         const vector<char>& orderedPlayerCodes,
         int depth,
         float bound,
-        const std::chrono::steady_clock::time_point& deadline
+        const std::chrono::steady_clock::time_point& deadline,
+        bool enforceTimeLimit
     ) {
         vector<SearchFrame> stack;
         stack.emplace_back(originalBoard, possibleMoves, orderedPlayerCodes, depth, bound, 0);
@@ -327,7 +329,7 @@ private:
         bool haveLastCompleted = false;
 
         while (!stack.empty()) {
-            if (timeExpired(deadline)) {
+            if (enforceTimeLimit && timeExpired(deadline)) {
                 return { {}, false, true };
             }
 
@@ -464,8 +466,8 @@ private:
 
 public:
     Korf2IterativeAgent(
-        char playerToken, int playerNumber, const vector<char>& nextPlayers, int searchDepth = 7, int timeLimitMs = 3000)
-        : Agent(playerToken, playerNumber, nextPlayers), searchDepth(searchDepth), timeLimitMs(timeLimitMs) {}
+        char playerToken, int playerNumber, const vector<char>& nextPlayers, int searchDepth = 7, int timeLimitMs = 3000, int minDepth = 0)
+        : Agent(playerToken, playerNumber, nextPlayers), searchDepth(searchDepth), timeLimitMs(timeLimitMs), minDepth(minDepth) {}
 
     
     float getLastBestResult(char token) {
@@ -504,8 +506,10 @@ public:
         bestResult.depthSearched = 0;
 
         for (int depth = 1; depth <= searchDepth; ++depth) {
-            if (timeExpired(deadline)) {
-                logLine(0, "Time cutoff reached before starting depth " + std::to_string(depth));
+            const bool enforceTimeLimit =
+                timeLimitMs > 0 && depth > minDepth;
+            if (enforceTimeLimit && timeExpired(deadline) && bestResult.depthSearched >= minDepth) {
+                logLine(0, "Both time cutoff and minimum depth reached before starting depth " + std::to_string(depth));
                 break;
             }
 
@@ -515,7 +519,8 @@ public:
                 allPlayers,
                 depth,
                 _sum_bound,
-                deadline
+                deadline,
+                enforceTimeLimit
             );
 
             if (!iteration.completed) {

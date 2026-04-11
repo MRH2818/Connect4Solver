@@ -85,7 +85,7 @@ function makeVectorChar(wasm, values) {
 
     // Agent thinking settings:
     const AGENT_MAX_DEPTH = 15;
-    const AGENT_THOUGHT_CAP_MS = 1000;
+    const AGENT_THOUGHT_CAP_MS = 6000;
 
     let turn = 0;
     let gameOver = false;
@@ -110,7 +110,8 @@ function makeVectorChar(wasm, values) {
                 players[i].num ?? (i + 1),
                 nextPlayers,
                 AGENT_MAX_DEPTH,
-                AGENT_THOUGHT_CAP_MS
+                AGENT_THOUGHT_CAP_MS,
+                4
             );
             players[i].isBot = true;
         } else {
@@ -155,6 +156,11 @@ function makeVectorChar(wasm, values) {
         });
 
         const move = players[turn].agent.chooseMove(wasmBoard, oppLastMoves, lastMoves.length === 0);
+        // PRINT EVALUATION TO CONSOLE:
+        console.log("Depth searched:", players[turn].agent.getLastSearchDepth())
+        players.forEach((p, idx) => {
+            console.log(`Player ${p.num} eval: ${players[turn].agent.getLastBestResult(wasmChar(playerTokens[idx]))}`);
+        });
 
         let placed = false;
         if (move && typeof move.size === "function" && move.size() > 0) {
