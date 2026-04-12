@@ -54,6 +54,11 @@
             const newurl = `../3dgame/threegame.html?config=${binstr}`;
             window.location.href = newurl;
             return setup;
+        } else if (setup.numDimensions >= 4) {
+            // BUILD REDIRECT
+            const newurl = `../4dgame/fourgame.html?config=${binstr}`;
+            window.location.href = newurl;
+            return setup;
         }
 
 
