@@ -102,7 +102,7 @@ function makeVectorChar(wasm, values) {
 
     // Agent thinking settings:
     const AGENT_MAX_DEPTH = 15;
-    const AGENT_THOUGHT_CAP_MS = 6000;
+    const AGENT_THOUGHT_CAP_MS = 1000;
 
     let turn = 0;
     let gameOver = false;
@@ -136,6 +136,13 @@ function makeVectorChar(wasm, values) {
         }
     }
 
+    visualBoard.enableHover = false;
+    players.forEach(p => {
+        if (!visualBoard.enableHover && !p.isBot) {
+            visualBoard.enableHover = true;
+        }
+    })
+
     const updateTurnStatus = () => {
         statusDiv.innerHTML = `Player ${players[turn].num}'s turn: (${(players[turn].type || "Human").toUpperCase()}).`;
     };
@@ -144,12 +151,14 @@ function makeVectorChar(wasm, values) {
         if (wasmBoard.checkWin(wasmChar(playerTokens[turn]))) {
             statusDiv.innerHTML = `Player ${players[turn].num} wins!`;
             gameOver = true;
+            visualBoard.enableHover = false;
             return;
         }
 
         if (wasmBoard.isFull()) {
             statusDiv.innerHTML = "Game is a draw!";
             gameOver = true;
+            visualBoard.enableHover = false;
             return;
         }
 
@@ -186,6 +195,7 @@ function makeVectorChar(wasm, values) {
         if (!placed) {
             statusDiv.innerHTML = "Internal error: bot produced no legal moves.";
             gameOver = true;
+            visualBoard.enableHover = false;
             return;
         }
 
@@ -200,6 +210,7 @@ function makeVectorChar(wasm, values) {
 
     const handleMoveAt = (x, z) => {
         if (gameOver) {
+            visualBoard.enableHover = false;
             return;
         }
         if (players[turn].isBot) {

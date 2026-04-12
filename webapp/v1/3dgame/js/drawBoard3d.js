@@ -23,7 +23,8 @@ class DrawBoard3D {
         boardSize,
         pixelSideLength = 650,
         boardColor = 0x1f4fbf,
-        boardCornerRadius = "10px"
+        boardCornerRadius = "10px",
+        enableHover
     ) {
         this.BOARD_SIZE = boardSize;
         this.canvas = document.getElementById("boardCanvas");
@@ -62,12 +63,15 @@ class DrawBoard3D {
             z: -half,
         };
 
+        this.enableHover = enableHover ?? true;
+
         this._pieceByKey = new Map();
         this._boardColor = boardColor;
         this._hoverTarget = null;
         this._hoverHandler = () => {};
         this._hoverEventsBound = false;
         this._landingYResolver = null;
+        this._clickPointerDown = null;
 
         this._buildLights();
         this._buildBoardFrame();
@@ -80,7 +84,34 @@ class DrawBoard3D {
     setOnClickHandler(onClick = (evt) => {
         console.log("Clicked:", evt.dropCoords);
     }) {
+        const maxMovePx = 8;
+
+        this.canvas.addEventListener("pointerdown", (e) => {
+            if (e.button !== 0) {
+                return;
+            }
+            this._clickPointerDown = { x: e.clientX, y: e.clientY };
+        });
+
+        this.canvas.addEventListener("pointercancel", () => {
+            this._clickPointerDown = null;
+        });
+
         this.canvas.addEventListener("click", (e) => {
+            if (e.button !== 0) {
+                return;
+            }
+            const start = this._clickPointerDown;
+            this._clickPointerDown = null;
+            if (!start) {
+                return;
+            }
+            const dx = e.clientX - start.x;
+            const dy = e.clientY - start.y;
+            if (dx * dx + dy * dy > maxMovePx * maxMovePx) {
+                return;
+            }
+
             const hoverResult = this._hoverTarget ?? this.getDropCoordinatesFromEvent(e);
             const dropCoords = this._extractDropCoords(hoverResult);
             onClick({ ...e, dropCoords });
@@ -325,6 +356,15 @@ class DrawBoard3D {
 
         this._hoverTarget = normalized;
         if (!normalized.inBounds) {
+            this.hoverPreview.visible = false;
+            if (this.hoverGhost) {
+                this.hoverGhost.visible = false;
+            }
+            this.render();
+            return;
+        }
+
+        if (!this.enableHover) {
             this.hoverPreview.visible = false;
             if (this.hoverGhost) {
                 this.hoverGhost.visible = false;
