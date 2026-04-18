@@ -2,3 +2,4 @@
 .cursor/
 *.exe
 *.txt
+*.diff
