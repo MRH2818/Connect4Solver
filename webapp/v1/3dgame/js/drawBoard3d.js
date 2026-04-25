@@ -28,8 +28,6 @@ class DrawBoard3D {
     ) {
         this.BOARD_SIZE = boardSize;
         this.canvas = document.getElementById("boardCanvas");
-        this.canvas.width = pixelSideLength;
-        this.canvas.height = pixelSideLength;
         this.canvas.style.borderRadius = boardCornerRadius;
         this.canvas.style.backgroundColor = "#0b0f1a";
 
@@ -38,7 +36,6 @@ class DrawBoard3D {
             antialias: true,
             alpha: true,
         });
-        this.renderer.setSize(pixelSideLength, pixelSideLength, false);
         this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
         this.scene = new THREE.Scene();
@@ -78,6 +75,25 @@ class DrawBoard3D {
         this._buildHoverPreview();
         this._setupControls();
         this.drawAllDots();
+        this._resizeToCanvas();
+        window.addEventListener("resize", () => this._resizeToCanvas());
+        this.render();
+    }
+
+    _resizeToCanvas() {
+        const w = Math.max(1, Math.floor(this.canvas.clientWidth || window.innerWidth || 1));
+        const h = Math.max(1, Math.floor(this.canvas.clientHeight || window.innerHeight || 1));
+
+        if (this.canvas.width !== w) {
+            this.canvas.width = w;
+        }
+        if (this.canvas.height !== h) {
+            this.canvas.height = h;
+        }
+
+        this.renderer.setSize(w, h, false);
+        this.camera.aspect = w / h;
+        this.camera.updateProjectionMatrix();
         this.render();
     }
 

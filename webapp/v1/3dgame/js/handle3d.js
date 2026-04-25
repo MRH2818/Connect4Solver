@@ -108,6 +108,19 @@ function makeVectorChar(wasm, values) {
     let gameOver = false;
     const lastMoves = [];
 
+    let botWorker = null;
+    let botWorkerReqId = 1;
+    const botWorkerPending = new Map();
+
+    const botWorkerCall = (type, payload) => {
+        if (!botWorker) return Promise.reject(new Error("Bot worker not initialized."));
+        const id = botWorkerReqId++;
+        return new Promise((resolve, reject) => {
+            botWorkerPending.set(id, { resolve, reject });
+            botWorker.postMessage({ id, type, ...payload });
+        });
+    };
+
     const allColors = ["red", "yellow", "orange", "green", "purple", "brown", "black", "maroon", "cyan", "pink", "gray", "rgb(106, 84, 12)"];
     const playerTokens = [];
     const playerColors = [];
@@ -119,21 +132,23 @@ function makeVectorChar(wasm, values) {
     }
 
     for (let i = 0; i < players.length; i++) {
-        if (players[i].type === "KorfBot") {
-            const nextPlayers = makeVectorChar(wasm, [...playerTokens.slice(i + 1), ...playerTokens.slice(0, i)]);
+        players[i].isBot = players[i].type === "KorfBot";
+    }
 
-            players[i].agent = new wasm.Korf2IterativeAgent(
-                wasmChar(playerTokens[i]),
-                players[i].num ?? (i + 1),
-                nextPlayers,
-                AGENT_MAX_DEPTH,
-                AGENT_THOUGHT_CAP_MS,
-                4
-            );
-            players[i].isBot = true;
-        } else {
-            players[i].isBot = false;
-        }
+    if (players.some(p => p.isBot)) {
+        botWorker = new Worker("../js/korfbot_worker.js");
+        botWorker.onmessage = (e) => {
+            const msg = e.data || {};
+            const pending = botWorkerPending.get(msg.id);
+            if (!pending) return;
+            botWorkerPending.delete(msg.id);
+            if (msg.ok) pending.resolve(msg.result);
+            else pending.reject(new Error(msg.error || "Worker error."));
+        };
+        botWorker.onerror = (e) => {
+            console.error("KorfBot worker crashed", e);
+        };
+        await botWorkerCall("reset", { boardSize, numDimensions: 3, players: players.map(p => ({ num: p.num, type: p.type })), playerTokens, agentMaxDepth: AGENT_MAX_DEPTH, agentThoughtCapMs: AGENT_THOUGHT_CAP_MS, agentBranching: 4 });
     }
 
     visualBoard.enableHover = false;
@@ -166,31 +181,46 @@ function makeVectorChar(wasm, values) {
         updateTurnStatus();
         if (players[turn].isBot) {
             statusDiv.innerHTML += "<br>Thinking...";
-            setTimeout(botThink, 0);
+            setTimeout(() => { botThink(); }, 0);
         }
     };
 
-    const botThink = () => {
+    const botThink = async () => {
         if (gameOver || !players[turn].isBot) {
             return;
         }
 
-        const oppLastMoves = new wasm.VectorVectorInt();
-        const recentOppMoves = lastMoves.slice(Math.max(0, lastMoves.length - (players.length - 1)));
-        recentOppMoves.forEach((val) => {
-            oppLastMoves.push_back(val);
+        const recentOppMoves = lastMoves.slice(Math.max(0, lastMoves.length - (players.length - 1))).map(v => {
+            const out = [];
+            for (let i = 0; i < v.size(); i++) out.push(v.get(i));
+            return out;
         });
 
-        const move = players[turn].agent.chooseMove(wasmBoard, oppLastMoves, lastMoves.length === 0);
-        // PRINT EVALUATION TO CONSOLE:
-        console.log("Depth searched:", players[turn].agent.getLastSearchDepth())
-        players.forEach((p, idx) => {
-            console.log(`Player ${p.num} eval: ${players[turn].agent.getLastBestResult(wasmChar(playerTokens[idx]))}`);
-        });
+        let thinkResult = null;
+        try {
+            thinkResult = await botWorkerCall("think", { turn, recentOppMoves, isFirstMove: lastMoves.length === 0 });
+        } catch (err) {
+            console.error("Bot think failed", err);
+            statusDiv.innerHTML = "Internal error: bot worker failed.";
+            gameOver = true;
+            visualBoard.enableHover = false;
+            return;
+        }
+
+        if (thinkResult && Number.isInteger(thinkResult.depth)) console.log("Depth searched:", thinkResult.depth);
+        if (thinkResult && Array.isArray(thinkResult.evals)) {
+            thinkResult.evals.forEach((ev) => {
+                console.log(`Token ${ev.token} eval: ${ev.value}`);
+            });
+        }
 
         let placed = false;
-        if (move && typeof move.size === "function" && move.size() > 0) {
+        const moveArr = thinkResult && Array.isArray(thinkResult.move) ? thinkResult.move : [];
+        if (moveArr.length > 0) {
+            const move = makeVectorInt(wasm, moveArr);
             placed = wasmBoard.addDrop(move, wasmChar(playerTokens[turn]));
+            if (placed) lastMoves.push(move);
+            else move.delete?.();
         }
         if (!placed) {
             statusDiv.innerHTML = "Internal error: bot produced no legal moves.";
@@ -199,11 +229,13 @@ function makeVectorChar(wasm, values) {
             return;
         }
 
-        const x = move.get(0);
-        const z = move.get(1);
+        const x = moveArr[0];
+        const z = moveArr[1];
         const y = wasmBoard.getLastMoveHeight();
         visualBoard.addDrop(x, y, z, playerColors[turn]);
-        lastMoves.push(move);
+        if (botWorker) {
+            try { await botWorkerCall("applyMove", { move: moveArr, token: playerTokens[turn] }); } catch (err) { console.error("Worker sync failed", err); }
+        }
 
         finishTurnOrEnd();
     };
@@ -230,6 +262,9 @@ function makeVectorChar(wasm, values) {
         const y = wasmBoard.getLastMoveHeight();
         visualBoard.addDrop(x, y, z, playerColors[turn]);
         lastMoves.push(move);
+        if (botWorker) {
+            botWorkerCall("applyMove", { move: [x, z], token: playerTokens[turn] }).catch((err) => console.error("Worker sync failed", err));
+        }
         finishTurnOrEnd();
     };
     
@@ -247,6 +282,6 @@ function makeVectorChar(wasm, values) {
     updateTurnStatus();
     if (players[turn].isBot) {
         statusDiv.innerHTML += "<br>Thinking...";
-        setTimeout(botThink, 0);
+        setTimeout(() => { botThink(); }, 0);
     }
 })();
