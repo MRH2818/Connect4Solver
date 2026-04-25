@@ -18,6 +18,10 @@
                         <option>Human</option>
                         <option>KorfBot</option>
                     </select>
+                    <div class="player-color-setting">
+                        <span class="player-color-swatch" style="background-color: red;"></span>
+                        <span class="player-color-text">Color: red</span>
+                    </div>
                 </div>
                 <div class="playertile" name="playertype" id="player_2">
                     <p>Player 2:</p>
@@ -25,6 +29,10 @@
                         <option>Human</option>
                         <option>KorfBot</option>
                     </select>
+                    <div class="player-color-setting">
+                        <span class="player-color-swatch" style="background-color: yellow;"></span>
+                        <span class="player-color-text">Color: yellow</span>
+                    </div>
                 </div>
             </div>
             
@@ -32,16 +40,18 @@
             <button type="button" onclick="addPlayer()">Add player</button>
 
             <!-- SET GAME MODE TO EITHER 2D OR 3D -->
-            <div>
+            <div class="toggle">
                 <strong>Set number of board dimensions:</strong>
-                <label>
-                    <input name="num-dimensions" type="radio" value="2" checked />
-                    2D
-                </label>
-                <label>
-                    <input name="num-dimensions" type="radio" value="3" />
-                    3D
-                </label>
+                <div>
+                    <label>
+                        <input name="num-dimensions" type="radio" value="2" checked />
+                        2D
+                    </label>
+                    <label>
+                        <input name="num-dimensions" type="radio" value="3" />
+                        3D
+                    </label>
+                </div>
             </div>
 
             <!-- SET BOARD SIZE (MAX 10, 7 for 3D+) -->
@@ -51,6 +61,21 @@
                 <div class="stepper-dial" aria-label="Adjust board size">
                     <button type="button" class="stepper-btn stepper-up" aria-label="Increase board size">+</button>
                     <button type="button" class="stepper-btn stepper-down" aria-label="Decrease board size">-</button>
+                </div>
+            </div>
+
+            <!-- SET WHETHER PLAYER ORDER SHOULD BE RANDOMIZED -->
+            <div class="toggle">
+                <strong>Random order?</strong>
+                <div>
+                    <label>
+                        <input name="randomize-player-order" type="radio" value="true" />
+                        Yes
+                    </label>
+                    <label>
+                        <input name="randomize-player-order" type="radio" value="false" checked />
+                        No
+                    </label>
                 </div>
             </div>
 

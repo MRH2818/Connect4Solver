@@ -23,9 +23,12 @@
             boardSize = Math.min((numDimensions === 2) ? 10 : 7, Math.max(4, Math.round(boardSize)));
         }
 
+        var randomizePlayerOrder = String(formData.get("randomize-player-order")) === "true";
+
         return {
             numDimensions: numDimensions,
             boardSize: boardSize,
+            randomizePlayerOrder: randomizePlayerOrder,
             players: players,
         };
     }
