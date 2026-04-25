@@ -97,7 +97,6 @@ form#game-setup-form > * + * { margin-top: 14px; }
     border: 1px solid var(--border);
     border-radius: 8px;
     background: rgba(0, 0, 0, 0.14);
-    float: left;
 }
 
 .player-color-swatch {

@@ -249,6 +249,7 @@ class DrawBoard3D {
         this.controls.minZoom = this.BOARD_SIZE * 1;
         this.controls.maxZoom = this.BOARD_SIZE * 3;
 
+        this.controls.minDistance = this.BOARD_SIZE;
         this.controls.maxDistance = this.BOARD_SIZE * 5;
 
         this.controls.mouseButtons = {
