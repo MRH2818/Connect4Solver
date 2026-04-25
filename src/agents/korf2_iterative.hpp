@@ -368,6 +368,21 @@ private:
                         " | bound " + std::to_string(frame.bound));
                 }
 
+                char winner = detectWinner(frame.board);
+                if (winner != '\0') {
+                    SearchResult result;
+                    result.scores = zeroScores(frame.orderedPlayerCodes);
+                    result.scores[winner] = _sum_bound;
+                    result.depthSearched = frame.depthRemaining;
+
+                    searchCache[frame.boardKey] = result;
+
+                    lastCompleted = result;
+                    haveLastCompleted = true;
+                    stack.pop_back();
+                    continue;
+                }
+
                 auto cachedIt = searchCache.find(frame.boardKey);
                 if (cachedIt != searchCache.end() &&
                     cachedIt->second.depthSearched >= frame.depthRemaining) {
