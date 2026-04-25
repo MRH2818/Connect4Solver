@@ -1,11 +1,13 @@
 // ADD NEW PLAYERS
 let nextPlayerNumber = 3;
 
-const NEXT_COLORS = ["orange", "green", "purple", "brown", "black", "maroon", "cyan", "pink", "gray", "rgb(106, 84, 12)"]
+const NEXT_COLORS = ["orange", "green", "purple", "brown", "black", "maroon", "cyan", "pink", "gray", "magenta", "rgb(106, 84, 12)"]
 
 function addPlayer() {
     const container = document.getElementById("players-container");
-    if (!container) return;
+    if (!container || nextPlayerNumber > 12) {
+        return;
+    }
 
     const n = nextPlayerNumber;
     const tile = document.createElement("div");

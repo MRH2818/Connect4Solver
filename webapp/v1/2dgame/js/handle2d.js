@@ -57,6 +57,7 @@ function makeVectorChar(wasm, values) {
     const configParam = params.get('config');
     let _NUM_DIMENSIONS;
     let _BOARD_SIZE;
+    let _RANDOM_PLAYER_ORDER;
     let players;
     // Agent thinking settings:
     const AGENT_MAX_DEPTH = 15;
@@ -78,6 +79,7 @@ function makeVectorChar(wasm, values) {
         _NUM_DIMENSIONS = 2;
         _BOARD_SIZE = config["boardSize"];
         players = config["players"];
+        _RANDOM_PLAYER_ORDER = config["randomizePlayerOrder"];
     }
     catch (err) {
         console.error('handle2d: failed to decode config, go back', err);
@@ -116,7 +118,7 @@ function makeVectorChar(wasm, values) {
     };
 
     // DEFINE PLAYERS
-    const allColors = ["red", "yellow", "orange", "green", "purple", "brown", "black", "maroon", "cyan", "pink", "gray", "rgb(106, 84, 12)"]
+    const allColors = ["red", "yellow", "orange", "green", "purple", "brown", "black", "maroon", "cyan", "pink", "gray", "magenta", "rgb(106, 84, 12)"]
     // IMPORTANT: build the full token list first so bots can see all opponents.
     for (let i = 0; i < players.length; i++) {
         // Player numbers are 1-based; map them to 'A', 'B', 'C', ...
@@ -268,6 +270,16 @@ function makeVectorChar(wasm, values) {
                 statusDiv.innerHTML += "<br>Thinking...";
                 setTimeout(() => { botThink(); }, 0);
             }
+        }
+    }
+
+    if (_RANDOM_PLAYER_ORDER) {
+        // Randomize player list:
+        for (let i = players.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [players[i], players[j]] = [players[j], players[i]];
+            [playerTokens[i], playerTokens[j]] = [playerTokens[j], playerTokens[i]];
+            [playerColors[i], playerColors[j]] = [playerColors[j], playerColors[i]];
         }
     }
 

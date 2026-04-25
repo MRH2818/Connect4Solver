@@ -54,11 +54,13 @@ function makeVectorChar(wasm, values) {
 
     let boardSize;
     let players;
+    let _RANDOM_PLAYER_ORDER;
 
     try {
         const config = decodeBASE64_URLtoOBJ(configParam);
         boardSize = config.boardSize;
         players = config.players;
+        _RANDOM_PLAYER_ORDER = config.randomizePlayerOrder;
 
         if (!Number.isInteger(boardSize) || boardSize <= 0 || !Array.isArray(players) || players.length === 0) {
             throw new Error("Invalid config values.");
@@ -121,7 +123,7 @@ function makeVectorChar(wasm, values) {
         });
     };
 
-    const allColors = ["red", "yellow", "orange", "green", "purple", "brown", "black", "maroon", "cyan", "pink", "gray", "rgb(106, 84, 12)"];
+    const allColors = ["red", "yellow", "orange", "green", "purple", "brown", "black", "maroon", "cyan", "pink", "gray", "magenta", "rgb(106, 84, 12)"];
     const playerTokens = [];
     const playerColors = [];
 
@@ -267,6 +269,16 @@ function makeVectorChar(wasm, values) {
         }
         finishTurnOrEnd();
     };
+
+    if (_RANDOM_PLAYER_ORDER) {
+        // Randomize player list:
+        for (let i = players.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [players[i], players[j]] = [players[j], players[i]];
+            [playerTokens[i], playerTokens[j]] = [playerTokens[j], playerTokens[i]];
+            [playerColors[i], playerColors[j]] = [playerColors[j], playerColors[i]];
+        }
+    }
     
     visualBoard.setOnHoverHandler(() => {});
 
