@@ -43,18 +43,56 @@ h1 {
     max-width: min(520px, calc(100vw - 24px));
 }
 
+#undoMoveButton,
+#nextMoveButton {
+    position: fixed;
+    top: 18px;
+    left: 12px;
+    z-index: 3;
+    margin-top: 34px;
+    padding: 8px 16px;
+    border: 1px solid rgba(122, 167, 255, 0.65);
+    border-radius: 999px;
+    background: rgba(122, 167, 255, 0.08);
+    color: #e7eefc;
+    font: 600 14px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    letter-spacing: 0.2px;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+}
+
+#undoMoveButton:hover,
+#nextMoveButton:hover {
+    background: rgba(122, 167, 255, 0.14);
+}
+
+#undoMoveButton:disabled,
+#nextMoveButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+#nextMoveButton {
+    margin-top: 74px;
+}
+
 .back-button {
     position: fixed;
-    top: 12px;
-    right: 12px;
-    z-index: 3;
-    padding: 6px 10px;
-    border: 1px solid #c3d2f5;
-    border-radius: 4px;
-    background: rgba(14, 25, 51, 0.85);
-    color: #f2f6ff;
+    z-index: 100;
+    top: 18px;
+    right: 18px;
+    padding: 8px 16px;
+    border: 1px solid rgba(122, 167, 255, 0.65);
+    border-radius: 999px;
+    background: rgba(122, 167, 255, 0.08);
+    color: #e7eefc;
     font: 600 14px/1 system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    letter-spacing: 0.2px;
     text-decoration: none;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
 }
 
 .back-button:hover {

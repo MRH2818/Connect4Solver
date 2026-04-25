@@ -255,6 +255,23 @@ class DrawBoard2D {
         this.renderBoard();
     }
 
+    // Removes the most recently placed piece, if one exists.
+    removeLastDrop() {
+        if (this.placedDrops.length === 0) {
+            return false;
+        }
+        this.placedDrops.pop();
+        this.renderBoard();
+        return true;
+    }
+
+    // Clears all placed pieces from the board.
+    clearPlacedDrops() {
+        this.placedDrops = [];
+        this.fallingDrop = null;
+        this.renderBoard();
+    }
+
     // Converts a color string to an rgba value with custom alpha.
     withAlpha(fillColor, alpha = 1) {
         if (typeof fillColor !== "string") {

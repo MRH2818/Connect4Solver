@@ -80,7 +80,7 @@ function makeVectorChar(wasm, values) {
     await window.ensureThreeLoaded();
 
     const wasm = await waitForConnect4Module();
-    const wasmBoard = new wasm.Board(boardSize, 3);
+    let wasmBoard = new wasm.Board(boardSize, 3);
 
     const visualBoard = new DrawBoard3D(boardSize);
     window.visualBoard = visualBoard; /* FOR DEBUGGING THROUGH CONSOLE */
@@ -108,7 +108,12 @@ function makeVectorChar(wasm, values) {
 
     let turn = 0;
     let gameOver = false;
+    let moveInProgress = false;
     const lastMoves = [];
+    const moveHistory = []; // Chronological move list, each entry is { move, x, y, z, playerIndex }.
+    const replayForwardMoves = []; // Replay stack for "Next Move", stores removed history entries.
+    const undoMoveButton = document.getElementById("undoMoveButton");
+    const nextMoveButton = document.getElementById("nextMoveButton");
 
     let botWorker = null;
     let botWorkerReqId = 1;
@@ -133,9 +138,20 @@ function makeVectorChar(wasm, values) {
         playerColors.push(allColors[i % allColors.length]);
     }
 
+    if (_RANDOM_PLAYER_ORDER) {
+        // Randomize player list:
+        for (let i = players.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [players[i], players[j]] = [players[j], players[i]];
+            [playerTokens[i], playerTokens[j]] = [playerTokens[j], playerTokens[i]];
+            [playerColors[i], playerColors[j]] = [playerColors[j], playerColors[i]];
+        }
+    }
+
     for (let i = 0; i < players.length; i++) {
         players[i].isBot = players[i].type === "KorfBot";
     }
+    const hasAnyHumanPlayer = players.some((player) => !player.isBot);
 
     if (players.some(p => p.isBot)) {
         botWorker = new Worker("../js/korfbot_worker.js");
@@ -164,7 +180,138 @@ function makeVectorChar(wasm, values) {
         statusDiv.innerHTML = `Player ${players[turn].num}'s turn: (${(players[turn].type || "Human").toUpperCase()}).`;
     };
 
-    const finishTurnOrEnd = () => {
+    // Updates Undo/Next button availability from current game state.
+    const syncActionButtons = () => {
+        if (!undoMoveButton && !nextMoveButton) {
+            return;
+        }
+        const hasHumanMoveToUndo = moveHistory.some((entry) => !players[entry.playerIndex].isBot);
+        if (undoMoveButton) {
+            undoMoveButton.disabled = moveInProgress || lastMoves.length === 0 || (hasAnyHumanPlayer && !hasHumanMoveToUndo);
+        }
+        if (nextMoveButton) {
+            nextMoveButton.disabled = moveInProgress || replayForwardMoves.length === 0;
+        }
+    };
+
+    // Rebuilds bot worker state from move history.
+    const rebuildWorkerState = async () => {
+        if (!botWorker) {
+            return;
+        }
+        await botWorkerCall("reset", { boardSize, numDimensions: 3, players: players.map(p => ({ num: p.num, type: p.type })), playerTokens, agentMaxDepth: AGENT_MAX_DEPTH, agentThoughtCapMs: AGENT_THOUGHT_CAP_MS, agentBranching: 4 });
+        for (let i = 0; i < moveHistory.length; i++) {
+            const tokenIndex = moveHistory[i].playerIndex;
+            await botWorkerCall("applyMove", { move: moveHistory[i].move, token: playerTokens[tokenIndex] });
+        }
+    };
+
+    // Recreates wasm board from current move history.
+    const rebuildBoardFromHistory = () => {
+        const nextBoard = new wasm.Board(boardSize, 3);
+        for (let i = 0; i < moveHistory.length; i++) {
+            const moveVec = makeVectorInt(wasm, moveHistory[i].move);
+            const placed = nextBoard.addDrop(moveVec, wasmChar(playerTokens[moveHistory[i].playerIndex]));
+            moveVec.delete?.();
+            if (!placed) {
+                throw new Error("Failed to rebuild 3D move history.");
+            }
+        }
+        wasmBoard.delete?.();
+        wasmBoard = nextBoard;
+    };
+
+    // Undoes the previous move and resynchronizes state.
+    const undoLastMove = async () => {
+        if (lastMoves.length === 0 || moveInProgress) {
+            return;
+        }
+
+        if (hasAnyHumanPlayer && !moveHistory.some((entry) => !players[entry.playerIndex].isBot)) {
+            return;
+        }
+
+        moveInProgress = true;
+        syncActionButtons();
+        try {
+            let removedTargetMove = false;
+            while (moveHistory.length > 0 && !removedTargetMove) {
+                const removed = moveHistory.pop();
+                const lastMoveVec = lastMoves.pop();
+                lastMoveVec?.delete?.();
+                if (!removed) {
+                    break;
+                }
+                replayForwardMoves.push(removed);
+                visualBoard.removeDrop(removed.x, removed.y, removed.z);
+                turn = (turn - 1 + players.length) % players.length;
+                if (!hasAnyHumanPlayer || !players[removed.playerIndex].isBot) {
+                    removedTargetMove = true;
+                }
+            }
+
+            if (!removedTargetMove) {
+                return;
+            }
+            rebuildBoardFromHistory();
+            gameOver = false;
+            visualBoard.enableHover = players.some((p) => !p.isBot);
+            updateTurnStatus();
+            await rebuildWorkerState();
+        } catch (err) {
+            console.error("Undo failed", err);
+            statusDiv.innerHTML = "Internal error: failed to undo move.";
+            gameOver = true;
+            visualBoard.enableHover = false;
+        } finally {
+            moveInProgress = false;
+            syncActionButtons();
+        }
+    };
+
+    // Replays one previously undone move from history.
+    const nextReplayMove = async () => {
+        if (replayForwardMoves.length === 0 || moveInProgress) {
+            return;
+        }
+
+        moveInProgress = true;
+        syncActionButtons();
+        try {
+            const replayEntry = replayForwardMoves.pop();
+            if (!replayEntry) {
+                return;
+            }
+
+            turn = replayEntry.playerIndex;
+            const replayVec = makeVectorInt(wasm, replayEntry.move);
+            const placed = wasmBoard.addDrop(replayVec, wasmChar(playerTokens[turn]));
+            if (!placed) {
+                replayVec.delete?.();
+                statusDiv.innerHTML = "Internal error: failed to replay move.";
+                gameOver = true;
+                visualBoard.enableHover = false;
+                return;
+            }
+
+            lastMoves.push(replayVec);
+            moveHistory.push(replayEntry);
+            await visualBoard.addDrop(replayEntry.x, replayEntry.y, replayEntry.z, playerColors[turn]);
+            finishTurnOrEnd(false);
+            await rebuildWorkerState();
+        } catch (err) {
+            console.error("Replay next move failed", err);
+            statusDiv.innerHTML = "Internal error: failed to replay move.";
+            gameOver = true;
+            visualBoard.enableHover = false;
+        } finally {
+            moveInProgress = false;
+            syncActionButtons();
+        }
+    };
+
+    // Finalizes turn bookkeeping and optionally advances bot autoplay.
+    const finishTurnOrEnd = (allowAutoAdvance = true) => {
         if (wasmBoard.checkWin(wasmChar(playerTokens[turn]))) {
             statusDiv.innerHTML = `Player ${players[turn].num} wins!`;
             gameOver = true;
@@ -181,70 +328,80 @@ function makeVectorChar(wasm, values) {
 
         turn = (turn + 1) % players.length;
         updateTurnStatus();
-        if (players[turn].isBot) {
+        if (allowAutoAdvance && players[turn].isBot) {
             statusDiv.innerHTML += "<br>Thinking...";
             setTimeout(() => { botThink(); }, 0);
         }
+        syncActionButtons();
     };
 
+    // Ask the bot for a move, animate it, then advance turn state.
     const botThink = async () => {
-        if (gameOver || !players[turn].isBot) {
+        if (gameOver || !players[turn].isBot || moveInProgress) {
             return;
         }
 
-        const recentOppMoves = lastMoves.slice(Math.max(0, lastMoves.length - (players.length - 1))).map(v => {
-            const out = [];
-            for (let i = 0; i < v.size(); i++) out.push(v.get(i));
-            return out;
-        });
-
-        let thinkResult = null;
+        moveInProgress = true;
         try {
-            thinkResult = await botWorkerCall("think", { turn, recentOppMoves, isFirstMove: lastMoves.length === 0 });
+            const recentOppMoves = lastMoves.slice(Math.max(0, lastMoves.length - (players.length - 1))).map(v => {
+                const out = [];
+                for (let i = 0; i < v.size(); i++) out.push(v.get(i));
+                return out;
+            });
+
+            const thinkResult = await botWorkerCall("think", { turn, recentOppMoves, isFirstMove: lastMoves.length === 0 });
+
+            if (thinkResult && Number.isInteger(thinkResult.depth)) console.log("Depth searched:", thinkResult.depth);
+            if (thinkResult && Array.isArray(thinkResult.evals)) {
+                thinkResult.evals.forEach((ev) => {
+                    console.log(`Token ${ev.token} eval: ${ev.value}`);
+                });
+            }
+
+            let placed = false;
+            const moveArr = thinkResult && Array.isArray(thinkResult.move) ? thinkResult.move : [];
+            if (moveArr.length > 0) {
+                const move = makeVectorInt(wasm, moveArr);
+                placed = wasmBoard.addDrop(move, wasmChar(playerTokens[turn]));
+                if (placed) lastMoves.push(move);
+                else move.delete?.();
+            }
+            if (!placed) {
+                statusDiv.innerHTML = "Internal error: bot produced no legal moves.";
+                gameOver = true;
+                visualBoard.enableHover = false;
+                return;
+            }
+
+            const x = moveArr[0];
+            const z = moveArr[1];
+            const y = wasmBoard.getLastMoveHeight();
+            await visualBoard.addDrop(x, y, z, playerColors[turn]);
+            moveHistory.push({ move: moveArr.slice(), x, y, z, playerIndex: turn });
+            replayForwardMoves.length = 0;
+            if (botWorker) {
+                try { await botWorkerCall("applyMove", { move: moveArr, token: playerTokens[turn] }); } catch (err) { console.error("Worker sync failed", err); }
+            }
+
+            finishTurnOrEnd();
         } catch (err) {
             console.error("Bot think failed", err);
             statusDiv.innerHTML = "Internal error: bot worker failed.";
             gameOver = true;
             visualBoard.enableHover = false;
-            return;
+        } finally {
+            moveInProgress = false;
+            syncActionButtons();
         }
-
-        if (thinkResult && Number.isInteger(thinkResult.depth)) console.log("Depth searched:", thinkResult.depth);
-        if (thinkResult && Array.isArray(thinkResult.evals)) {
-            thinkResult.evals.forEach((ev) => {
-                console.log(`Token ${ev.token} eval: ${ev.value}`);
-            });
-        }
-
-        let placed = false;
-        const moveArr = thinkResult && Array.isArray(thinkResult.move) ? thinkResult.move : [];
-        if (moveArr.length > 0) {
-            const move = makeVectorInt(wasm, moveArr);
-            placed = wasmBoard.addDrop(move, wasmChar(playerTokens[turn]));
-            if (placed) lastMoves.push(move);
-            else move.delete?.();
-        }
-        if (!placed) {
-            statusDiv.innerHTML = "Internal error: bot produced no legal moves.";
-            gameOver = true;
-            visualBoard.enableHover = false;
-            return;
-        }
-
-        const x = moveArr[0];
-        const z = moveArr[1];
-        const y = wasmBoard.getLastMoveHeight();
-        visualBoard.addDrop(x, y, z, playerColors[turn]);
-        if (botWorker) {
-            try { await botWorkerCall("applyMove", { move: moveArr, token: playerTokens[turn] }); } catch (err) { console.error("Worker sync failed", err); }
-        }
-
-        finishTurnOrEnd();
     };
 
-    const handleMoveAt = (x, z) => {
+    // Apply a human move and wait for the visual drop animation.
+    const handleMoveAt = async (x, z) => {
         if (gameOver) {
             visualBoard.enableHover = false;
+            return;
+        }
+        if (moveInProgress) {
             return;
         }
         if (players[turn].isBot) {
@@ -261,24 +418,22 @@ function makeVectorChar(wasm, values) {
             return;
         }
 
-        const y = wasmBoard.getLastMoveHeight();
-        visualBoard.addDrop(x, y, z, playerColors[turn]);
-        lastMoves.push(move);
-        if (botWorker) {
-            botWorkerCall("applyMove", { move: [x, z], token: playerTokens[turn] }).catch((err) => console.error("Worker sync failed", err));
+        moveInProgress = true;
+        try {
+            const y = wasmBoard.getLastMoveHeight();
+            await visualBoard.addDrop(x, y, z, playerColors[turn]);
+            lastMoves.push(move);
+            moveHistory.push({ move: [x, z], x, y, z, playerIndex: turn });
+            replayForwardMoves.length = 0;
+            if (botWorker) {
+                botWorkerCall("applyMove", { move: [x, z], token: playerTokens[turn] }).catch((err) => console.error("Worker sync failed", err));
+            }
+            finishTurnOrEnd();
+        } finally {
+            moveInProgress = false;
+            syncActionButtons();
         }
-        finishTurnOrEnd();
     };
-
-    if (_RANDOM_PLAYER_ORDER) {
-        // Randomize player list:
-        for (let i = players.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [players[i], players[j]] = [players[j], players[i]];
-            [playerTokens[i], playerTokens[j]] = [playerTokens[j], playerTokens[i]];
-            [playerColors[i], playerColors[j]] = [playerColors[j], playerColors[i]];
-        }
-    }
     
     visualBoard.setOnHoverHandler(() => {});
 
@@ -288,10 +443,39 @@ function makeVectorChar(wasm, values) {
         }
 
         const [x, z] = dropCoords;
-        handleMoveAt(x, z);
+        handleMoveAt(x, z).catch((err) => {
+            moveInProgress = false;
+            console.error("Failed to apply move", err);
+            statusDiv.innerHTML = "Internal error: failed to apply move.";
+            gameOver = true;
+            visualBoard.enableHover = false;
+        });
     });
 
     updateTurnStatus();
+    syncActionButtons();
+    if (undoMoveButton) {
+        undoMoveButton.addEventListener("click", () => {
+            undoLastMove().catch((err) => {
+                console.error("Undo failed", err);
+                statusDiv.innerHTML = "Internal error: failed to undo move.";
+                gameOver = true;
+                visualBoard.enableHover = false;
+                syncActionButtons();
+            });
+        });
+    }
+    if (nextMoveButton) {
+        nextMoveButton.addEventListener("click", () => {
+            nextReplayMove().catch((err) => {
+                console.error("Replay next move failed", err);
+                statusDiv.innerHTML = "Internal error: failed to replay move.";
+                gameOver = true;
+                visualBoard.enableHover = false;
+                syncActionButtons();
+            });
+        });
+    }
     if (players[turn].isBot) {
         statusDiv.innerHTML += "<br>Thinking...";
         setTimeout(() => { botThink(); }, 0);

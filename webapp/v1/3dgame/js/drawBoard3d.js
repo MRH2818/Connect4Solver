@@ -69,6 +69,9 @@ class DrawBoard3D {
         this._hoverEventsBound = false;
         this._landingYResolver = null;
         this._clickPointerDown = null;
+        this._dropAnimationsByKey = new Map();
+        this._dropAnimationFrameId = null;
+        this._dropDurationMs = 350;
 
         this._buildLights();
         this._buildBoardFrame();
@@ -327,7 +330,47 @@ class DrawBoard3D {
         return piece;
     }
 
-    addDrop(x, y, z, fillColor, ghost=false) {
+    // Animate active drop pieces and render each frame until all settle.
+    _runDropAnimations(frameTimeMs) {
+        if (this._dropAnimationsByKey.size === 0) {
+            this._dropAnimationFrameId = null;
+            return;
+        }
+
+        this._dropAnimationsByKey.forEach((animation, key) => {
+            const elapsed = Math.max(0, frameTimeMs - animation.startTimeMs);
+            const progress = Math.min(1, elapsed / animation.durationMs);
+            const easedProgress = 1 - Math.pow(1 - progress, 3);
+            const nextY = animation.startY + (animation.targetY - animation.startY) * easedProgress;
+            animation.piece.position.y = nextY;
+
+            if (progress >= 1) {
+                animation.piece.position.y = animation.targetY;
+                this._dropAnimationsByKey.delete(key);
+                animation.resolve();
+            }
+        });
+
+        this.render();
+
+        if (this._dropAnimationsByKey.size === 0) {
+            this._dropAnimationFrameId = null;
+            return;
+        }
+
+        this._dropAnimationFrameId = requestAnimationFrame((nextTimeMs) => this._runDropAnimations(nextTimeMs));
+    }
+
+    // Ensure the drop animation frame loop is running when drops are queued.
+    _ensureDropAnimationLoopStarted() {
+        if (this._dropAnimationFrameId != null) {
+            return;
+        }
+        this._dropAnimationFrameId = requestAnimationFrame((frameTimeMs) => this._runDropAnimations(frameTimeMs));
+    }
+
+    // Add a piece to the board and animate from above the top layer.
+    addDrop(x, y, z, fillColor, ghost = false) {
         if (Array.isArray(x)) {
             [x, y, z, fillColor] = [x[0], x[1], x[2], y];
         }
@@ -342,7 +385,46 @@ class DrawBoard3D {
         const piece = this._getPieceMesh(x, y, z, fillColor, ghost);
         this.boardRoot.add(piece);
         this._pieceByKey.set(key, piece);
+
+        if (ghost) {
+            this.render();
+            return Promise.resolve();
+        }
+
+        const targetY = piece.position.y;
+        const startY = this.boardOffset.y + (this.BOARD_SIZE - 1) * this.cellSpacing + this.cellRadius * 2.4;
+        piece.position.y = startY;
         this.render();
+
+        return new Promise((resolve) => {
+            const previousAnimation = this._dropAnimationsByKey.get(key);
+            if (previousAnimation) {
+                previousAnimation.resolve();
+            }
+            this._dropAnimationsByKey.set(key, {
+                piece,
+                startY,
+                targetY,
+                startTimeMs: performance.now(),
+                durationMs: this._dropDurationMs,
+                resolve,
+            });
+            this._ensureDropAnimationLoopStarted();
+        });
+    }
+
+    // Removes a single placed piece at the given board coordinates.
+    removeDrop(x, y, z) {
+        const key = `${x},${y},${z}`;
+        const piece = this._pieceByKey.get(key);
+        if (!piece) {
+            return false;
+        }
+        this.boardRoot.remove(piece);
+        this._pieceByKey.delete(key);
+        this._dropAnimationsByKey.delete(key);
+        this.render();
+        return true;
     }
 
     refresh() {
