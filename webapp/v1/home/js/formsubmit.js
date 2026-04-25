@@ -1,10 +1,7 @@
 (function () {
     function collectSetup(formData) {
-        var raw = Number(formData.get("num-dimensions"));
-        var numDimensions = 2;
-        if (Number.isFinite(raw)) {
-            numDimensions = Math.min(6, Math.max(2, Math.round(raw)));
-        }
+        var raw = parseInt(String(formData.get("num-dimensions") || "2"), 10);
+        var numDimensions = (raw === 3) ? 3 : 2;
 
         var players = [];
         var keys = [];

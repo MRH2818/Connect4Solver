@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <link rel="stylesheet" href="css/home.css" />
         <script src="../js/urlencoding.js"></script>
         <script src="js/addplayersdropdown.js" defer></script>
+        <script src="js/boardsizestepper.js" defer></script>
         <script src="js/formsubmit.js" defer></script>
     </head>
     <body>
         <form id="game-setup-form" action="#" method="post">
-            <h1>Pick a player</h1>
+            <h1>Set up your game!</h1>
             <div id="players-container">
                 <!-- PRE-DEFINED PLAYER TILES TO ENFORCE 2 TILE MINIMUM -->
                 <div class="playertile" id="player_1">
@@ -30,12 +32,27 @@
             <button type="button" onclick="addPlayer()">Add player</button>
 
             <!-- SET GAME MODE TO EITHER 2D OR 3D -->
-            <label for="num-dimensions"><strong>Set number of board dimensions (2 or 3):</strong></label>
-            <input id="num-dimensions" name="num-dimensions" type="number" min="2" max="3" step="1" value="2" />
+            <div>
+                <strong>Set number of board dimensions:</strong>
+                <label>
+                    <input name="num-dimensions" type="radio" value="2" checked />
+                    2D
+                </label>
+                <label>
+                    <input name="num-dimensions" type="radio" value="3" />
+                    3D
+                </label>
+            </div>
 
             <!-- SET BOARD SIZE (MAX 10, 7 for 3D+) -->
             <label for="board-size"><strong>Set board size (max 10 for 2D, 7 for 3D+):</strong></label>
-            <input id="board-size" name="boardsize" type="number" min="4" max="10" step="1" value="7" />
+            <div class="stepper" data-stepper-for="board-size">
+                <input id="board-size" name="boardsize" type="number" min="4" max="10" step="1" value="7" />
+                <div class="stepper-dial" aria-label="Adjust board size">
+                    <button type="button" class="stepper-btn stepper-up" aria-label="Increase board size">+</button>
+                    <button type="button" class="stepper-btn stepper-down" aria-label="Decrease board size">-</button>
+                </div>
+            </div>
 
             <!-- ON CLICK, HANDLE SUBMISSION IN JAVASCRIPT -->
             <button type="submit">Play!</button>
