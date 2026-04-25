@@ -22,6 +22,8 @@ class DrawBoard2D {
         this.holeRadius = (this.cellSize / 2) - this.CIRCLES_PADDING; // Radius of each circle, in pixels
         this.placedDrops = [];
         this.hoverDrop = null;
+        this.fallingDrop = null;
+        this.currentAnimation = null;
     }
     
     // Sets click handler that maps canvas clicks to board columns.
@@ -38,9 +40,61 @@ class DrawBoard2D {
     }
 
     // Adds a game piece at the specified visual position.
-    async addDrop(x, y, fillColor) {
-        this.placedDrops.push({ x, y, fillColor });
-        this.renderBoard();
+    async addDrop(x, y, fillColor, animate = true) {
+        if (!animate) {
+            this.placedDrops.push({ x, y, fillColor });
+            this.renderBoard();
+            return;
+        }
+
+        // Ensures the board does not run overlapping piece-drop animations.
+        if (this.currentAnimation) {
+            await this.currentAnimation;
+        }
+
+        this.currentAnimation = this.animateDrop(x, y, fillColor);
+        try {
+            await this.currentAnimation;
+        } finally {
+            this.currentAnimation = null;
+        }
+    }
+
+    // Animates a single piece falling from the top into its target slot.
+    animateDrop(x, targetY, fillColor) {
+        const startY = (this.cellSize * 0.5) - (this.holeRadius * 1.5);
+        const distance = Math.max(0, targetY - startY);
+        const pxPerMs = 1.6;
+        const durationMs = Math.max(170, Math.min(520, distance / pxPerMs));
+        const startTs = performance.now();
+
+        return new Promise((resolve) => {
+            const tick = (nowTs) => {
+                const elapsed = nowTs - startTs;
+                const t = Math.max(0, Math.min(1, elapsed / durationMs));
+                const eased = 1 - ((1 - t) * (1 - t));
+                const y = startY + (distance * eased);
+
+                this.fallingDrop = {
+                    x,
+                    y,
+                    fillColor,
+                };
+                this.renderBoard();
+
+                if (t < 1) {
+                    requestAnimationFrame(tick);
+                    return;
+                }
+
+                this.fallingDrop = null;
+                this.placedDrops.push({ x, y: targetY, fillColor });
+                this.renderBoard();
+                resolve();
+            };
+
+            requestAnimationFrame(tick);
+        });
     }
 
     // Draws a piece or open slot with layered shading.
@@ -152,6 +206,18 @@ class DrawBoard2D {
                 this.hoverDrop.fillColor,
                 "rgb(44, 44, 44, 0.1)",
                 2
+            );
+        }
+
+        // Draws currently animated falling piece above board slots.
+        if (this.fallingDrop) {
+            this.drawSingleHole(
+                this.fallingDrop.x,
+                this.fallingDrop.y,
+                this.holeRadius,
+                this.fallingDrop.fillColor,
+                "rgba(8, 20, 52, 0.1)",
+                2.5
             );
         }
     }

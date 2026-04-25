@@ -101,6 +101,7 @@ function makeVectorChar(wasm, values) {
     const wasm = await waitForConnect4Module(); // GET WASM SERVICE
     const wasmBoard = new wasm.Board(_BOARD_SIZE, 2);
     let gameOver = false;
+    let isAnimatingDrop = false;
 
     let playerTokens = [];
     let playerColors = [];
@@ -167,6 +168,17 @@ function makeVectorChar(wasm, values) {
         return null;
     };
 
+    // Applies a finalized move and waits for board animation before advancing.
+    const finalizeMove = async (col, playerIndex) => {
+        const targetDraw = visualBoard.boardCoordsToVisualCoords(col, wasmBoard.getLastMoveHeight());
+        isAnimatingDrop = true;
+        try {
+            await visualBoard.addDrop(targetDraw[0], targetDraw[1], playerColors[playerIndex], true);
+        } finally {
+            isAnimatingDrop = false;
+        }
+    };
+
     // DEFINE BOT thinking method:
     const botThink = async () => {
         if (gameOver || !players[turn].isBot) {
@@ -226,8 +238,7 @@ function makeVectorChar(wasm, values) {
         }
 
         // DRAW MOVE
-        const targetDraw = visualBoard.boardCoordsToVisualCoords(col, wasmBoard.getLastMoveHeight());
-        visualBoard.addDrop(targetDraw[0], targetDraw[1], playerColors[turn]);
+        await finalizeMove(col, turn);
         if (botWorker) {
             try { await botWorkerCall("applyMove", { move: moveArr, token: playerTokens[turn] }); } catch (err) { console.error("Worker sync failed", err); }
         }
@@ -245,9 +256,12 @@ function makeVectorChar(wasm, values) {
     }
 
     // DEFINE onClick function:
-    const onClick = (e) => {
+    const onClick = async (e) => {
         if (gameOver) {
             return "";
+        }
+        if (isAnimatingDrop) {
+            return;
         }
         if (players[turn].isBot) {
             statusDiv.innerHTML = `Player ${players[turn].num}'s turn: (${players[turn].type.toUpperCase()}).<br>Wait! The bot is thinking!`;
@@ -276,10 +290,13 @@ function makeVectorChar(wasm, values) {
         if (botWorker) {
             botWorkerCall("applyMove", { move: [col], token: playerTokens[turn] }).catch((err) => console.error("Worker sync failed", err));
         }
-        const targetDraw = visualBoard.boardCoordsToVisualCoords(col, wasmBoard.getLastMoveHeight());
-        
         // DRAW PIECE
-        visualBoard.addDrop(targetDraw[0], targetDraw[1], playerColors[turn]);
+        try {
+            await finalizeMove(col, turn);
+        } catch (err) {
+            console.error("Drop animation failed", err);
+            return;
+        }
 
         if (!gameOver) {
             turn = (turn + 1) % players.length;
