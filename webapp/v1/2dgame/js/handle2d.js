@@ -148,6 +148,25 @@ function makeVectorChar(wasm, values) {
         await botWorkerCall("reset", { boardSize: _BOARD_SIZE, numDimensions: 2, players: players.map(p => ({ num: p.num, type: p.type })), playerTokens, agentMaxDepth: AGENT_MAX_DEPTH, agentThoughtCapMs: AGENT_THOUGHT_CAP_MS, agentBranching: 4 });
     }
 
+    // Finds where the next piece would land in a given column.
+    const landingRowForColumn = (col) => {
+        if (!Number.isInteger(col) || col < 0 || col >= _BOARD_SIZE) {
+            return null;
+        }
+
+        const empty = wasmChar("_");
+        for (let row = 0; row < _BOARD_SIZE; row++) {
+            const coords = makeVectorInt(wasm, [col, row]);
+            const idx = wasmBoard.coordsToIndex(coords);
+            coords.delete?.();
+            if (wasmBoard.getCell(idx) === empty) {
+                return row;
+            }
+        }
+
+        return null;
+    };
+
     // DEFINE BOT thinking method:
     const botThink = async () => {
         if (gameOver || !players[turn].isBot) {
@@ -293,6 +312,27 @@ function makeVectorChar(wasm, values) {
 
     visualBoard.setOnClickHandler((e) => {
         onClick(e);
+    });
+
+    // Shows a subtle preview piece at the top of the hovered column.
+    visualBoard.canvas.addEventListener("mousemove", (e) => {
+        if (gameOver || players[turn].isBot) {
+            visualBoard.clearHoverPreview();
+            return;
+        }
+
+        const col = visualBoard.getColumnFromOffsetX(e.offsetX);
+        const row = landingRowForColumn(col);
+        if (row == null) {
+            visualBoard.clearHoverPreview();
+            return;
+        }
+
+        visualBoard.setHoverPreview(col, row, playerColors[turn]);
+    });
+
+    visualBoard.canvas.addEventListener("mouseleave", () => {
+        visualBoard.clearHoverPreview();
     });
 
 

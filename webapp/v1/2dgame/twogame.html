@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html>
     <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Connect 4 - 2D Game</title>
         <!-- JAVASCRIPT! -->
         <script src="../js/connect4_utils.js"></script>
         <script src="../js/urlencoding.js"></script>
@@ -12,9 +15,22 @@
         <link rel="stylesheet" href="css/2dgame.css">
     </head>
     <body>
-        <a class="back-button" href="../home/index.html">Back</a>
-        <h1>Welcome to the 2d game!</h1>
-        <canvas id="boardCanvas"></canvas>
-        <div id="statusUpdate"></div>
+        <div class="page-shell">
+            <a class="back-button" href="../home/index.html">Home</a>
+            <header class="game-header">
+                <h1>Connect 4 Arena</h1>
+                <p>Pick a column, drop your piece, and control the board.</p>
+            </header>
+
+            <main class="game-stage">
+                <div class="board-frame" aria-label="2D game board container">
+                    <canvas id="boardCanvas"></canvas>
+                </div>
+                <div class="status-panel">
+                    <div class="status-label">Match Status</div>
+                    <div id="statusUpdate">Waiting for first move...</div>
+                </div>
+            </main>
+        </div>
     </body>
 </html>
