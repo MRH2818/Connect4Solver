@@ -25,11 +25,19 @@
 
         var randomizePlayerOrder = String(formData.get("randomize-player-order")) === "true";
 
+        // BOT SETTINGS
+        var agentMaxTime = Number(formData.get("agentMaxTime"));
+        var agentMaxDepth = Number(formData.get("agentMaxDepth"));
+        var agentMinDepth = Number(formData.get("agentMinDepth"));
+
         return {
             numDimensions: numDimensions,
             boardSize: boardSize,
             randomizePlayerOrder: randomizePlayerOrder,
             players: players,
+            agentMaxTime: agentMaxTime,
+            agentMaxDepth: agentMaxDepth,
+            agentMinDepth: agentMinDepth,
         };
     }
 

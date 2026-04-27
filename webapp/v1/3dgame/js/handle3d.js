@@ -55,12 +55,19 @@ function makeVectorChar(wasm, values) {
     let boardSize;
     let players;
     let _RANDOM_PLAYER_ORDER;
+    let AGENT_MAX_DEPTH = 15;
+    let AGENT_THOUGHT_CAP_MS = 1000;
+    let AGENT_MIN_DEPTH = 0;
 
     try {
         const config = decodeBASE64_URLtoOBJ(configParam);
         boardSize = config.boardSize;
         players = config.players;
         _RANDOM_PLAYER_ORDER = config.randomizePlayerOrder;
+
+        if (config.agentMaxDepth) AGENT_MAX_DEPTH = parseInt(config.agentMaxDepth);
+        if (config.agentMaxTime) AGENT_THOUGHT_CAP_MS = parseFloat(config.agentMaxTime) * 1000;
+        if (config.agentMinDepth) AGENT_MIN_DEPTH = parseInt(config.agentMinDepth);
 
         if (!Number.isInteger(boardSize) || boardSize <= 0 || !Array.isArray(players) || players.length === 0) {
             throw new Error("Invalid config values.");
@@ -101,10 +108,6 @@ function makeVectorChar(wasm, values) {
         return null;
     };
     visualBoard.setLandingHeightResolver(landingYForColumn);
-
-    // Agent thinking settings:
-    const AGENT_MAX_DEPTH = 15;
-    const AGENT_THOUGHT_CAP_MS = 1000;
 
     let turn = 0;
     let gameOver = false;
@@ -166,7 +169,7 @@ function makeVectorChar(wasm, values) {
         botWorker.onerror = (e) => {
             console.error("KorfBot worker crashed", e);
         };
-        await botWorkerCall("reset", { boardSize, numDimensions: 3, players: players.map(p => ({ num: p.num, type: p.type })), playerTokens, agentMaxDepth: AGENT_MAX_DEPTH, agentThoughtCapMs: AGENT_THOUGHT_CAP_MS, agentBranching: 4 });
+        await botWorkerCall("reset", { boardSize, numDimensions: 3, players: players.map(p => ({ num: p.num, type: p.type })), playerTokens, agentMaxDepth: AGENT_MAX_DEPTH, agentThoughtCapMs: AGENT_THOUGHT_CAP_MS, agentMinDepth: AGENT_MIN_DEPTH });
     }
 
     visualBoard.enableHover = false;
@@ -199,7 +202,7 @@ function makeVectorChar(wasm, values) {
         if (!botWorker) {
             return;
         }
-        await botWorkerCall("reset", { boardSize, numDimensions: 3, players: players.map(p => ({ num: p.num, type: p.type })), playerTokens, agentMaxDepth: AGENT_MAX_DEPTH, agentThoughtCapMs: AGENT_THOUGHT_CAP_MS, agentBranching: 4 });
+        await botWorkerCall("reset", { boardSize, numDimensions: 3, players: players.map(p => ({ num: p.num, type: p.type })), playerTokens, agentMaxDepth: AGENT_MAX_DEPTH, agentThoughtCapMs: AGENT_THOUGHT_CAP_MS, agentMinDepth: AGENT_MIN_DEPTH });
         for (let i = 0; i < moveHistory.length; i++) {
             const tokenIndex = moveHistory[i].playerIndex;
             await botWorkerCall("applyMove", { move: moveHistory[i].move, token: playerTokens[tokenIndex] });

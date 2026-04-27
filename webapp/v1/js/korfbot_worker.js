@@ -61,7 +61,7 @@ async function handleReset(msg) {
     const numDimensions = msg.numDimensions;
     const agentMaxDepth = msg.agentMaxDepth;
     const agentThoughtCapMs = msg.agentThoughtCapMs;
-    const agentBranching = msg.agentBranching;
+    const agentMinDepth = msg.agentMinDepth ?? 0;
     const cfgPlayers = msg.players;
     const cfgTokens = msg.playerTokens;
 
@@ -80,7 +80,7 @@ async function handleReset(msg) {
     for (let i = 0; i < players.length; i++) {
         if (!players[i].isBot) continue;
         const nextPlayers = makeVectorChar(wasm, [...playerTokens.slice(i + 1), ...playerTokens.slice(0, i)]);
-        players[i].agent = new wasm.Korf2IterativeAgent(wasmChar(playerTokens[i]), players[i].num ?? (i + 1), nextPlayers, agentMaxDepth, agentThoughtCapMs, agentBranching);
+        players[i].agent = new wasm.Korf2IterativeAgent(wasmChar(playerTokens[i]), players[i].num ?? (i + 1), nextPlayers, agentMaxDepth, agentThoughtCapMs, agentMinDepth);
     }
 
     return { ok: true };
@@ -143,4 +143,3 @@ self.onmessage = async (e) => {
         self.postMessage({ id, ok: false, error: String(err && err.message ? err.message : err) });
     }
 };
-
