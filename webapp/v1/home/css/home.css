@@ -265,7 +265,7 @@ button[type="submit"]:hover { background: rgba(122, 167, 255, 0.12); }
 
 /* Label + number input block */
 label[for="board-size"] { display: block; }
-#board-size { margin-top: 8px; }
+#board-size { margin: 0; }
 
 .stepper {
     display: grid;
@@ -279,6 +279,7 @@ label[for="board-size"] { display: block; }
 
 .stepper-dial {
     display: grid;
+    height: 100%;
     grid-template-rows: 1fr 1fr;
     border: 1px solid var(--border2);
     border-radius: 10px;
