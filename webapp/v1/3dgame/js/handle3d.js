@@ -41,7 +41,7 @@ function makeVectorChar(wasm, values) {
 
 (async function () {
     const statusDiv = document.getElementById("statusUpdate");
-    statusDiv.innerHTML = "Loading 3D board...";
+    statusDiv.innerHTML = "INITIALIZING 3D ENVIRONMENT...";
 
     const params = new URLSearchParams(window.location.search);
     const configParam = params.get("config");
@@ -169,7 +169,18 @@ function makeVectorChar(wasm, values) {
         botWorker.onerror = (e) => {
             console.error("KorfBot worker crashed", e);
         };
+
+        let dots = 0;
+        const loadingInterval = setInterval(() => {
+            dots = (dots + 1) % 4;
+            statusDiv.innerHTML = `AWAKENING KORFBOT AI${'.'.repeat(dots)}`;
+        }, 300);
+
         await botWorkerCall("reset", { boardSize, numDimensions: 3, players: players.map(p => ({ num: p.num, type: p.type })), playerTokens, agentMaxDepth: AGENT_MAX_DEPTH, agentThoughtCapMs: AGENT_THOUGHT_CAP_MS, agentMinDepth: AGENT_MIN_DEPTH });
+        
+        clearInterval(loadingInterval);
+        statusDiv.innerHTML = "AI SYNC COMPLETE.";
+        setTimeout(() => updateTurnStatus(), 500);
     }
 
     visualBoard.enableHover = false;
@@ -179,8 +190,16 @@ function makeVectorChar(wasm, values) {
         }
     })
 
-    const updateTurnStatus = () => {
-        statusDiv.innerHTML = `Player ${players[turn].num}'s turn: (${(players[turn].type || "Human").toUpperCase()}).`;
+    const getStatusHTML = (playerIdx, isThinking = false) => {
+        const p = players[playerIdx];
+        const typeLabel = "";//p.isBot ? "AI" : "HUMAN";
+        const action = isThinking ? "is calculating..." : "- WAITING FOR MOVE";
+        const prefix = p.isBot ? "[KORFBOT]" : "[USER]";
+        return `<small>${prefix}</small> <span style="color: ${playerColors[playerIdx]}; font-weight: bold; text-transform: uppercase;">Player ${p.num}</span>${typeLabel} ${action}`;
+    };
+
+    const updateTurnStatus = (isThinking = false) => {
+        statusDiv.innerHTML = getStatusHTML(turn, isThinking);
     };
 
     // Updates Undo/Next button availability from current game state.
@@ -316,14 +335,14 @@ function makeVectorChar(wasm, values) {
     // Finalizes turn bookkeeping and optionally advances bot autoplay.
     const finishTurnOrEnd = (allowAutoAdvance = true) => {
         if (wasmBoard.checkWin(wasmChar(playerTokens[turn]))) {
-            statusDiv.innerHTML = `Player ${players[turn].num} wins!`;
+            statusDiv.innerHTML = `<span style="color: ${playerColors[turn]}; font-weight: bold; text-transform: uppercase;">Player ${players[turn].num} WINS!</span>`;
             gameOver = true;
             visualBoard.enableHover = false;
             return;
         }
 
         if (wasmBoard.isFull()) {
-            statusDiv.innerHTML = "Game is a draw!";
+            statusDiv.innerHTML = "<strong>STALEMATE - IT'S A DRAW!</strong>";
             gameOver = true;
             visualBoard.enableHover = false;
             return;
@@ -332,7 +351,7 @@ function makeVectorChar(wasm, values) {
         turn = (turn + 1) % players.length;
         updateTurnStatus();
         if (allowAutoAdvance && players[turn].isBot) {
-            statusDiv.innerHTML += "<br>Thinking...";
+            updateTurnStatus(true);
             setTimeout(() => { botThink(); }, 0);
         }
         syncActionButtons();
@@ -408,16 +427,15 @@ function makeVectorChar(wasm, values) {
             return;
         }
         if (players[turn].isBot) {
-            statusDiv.innerHTML = `Player ${players[turn].num}'s turn: (${players[turn].type.toUpperCase()}).<br>Wait! The bot is thinking!`;
+            updateTurnStatus(true);
             return;
         }
 
         const move = makeVectorInt(wasm, [x, z]);
         const placed = wasmBoard.addDrop(move, wasmChar(playerTokens[turn]));
-
         if (!placed) {
             move.delete?.();
-            statusDiv.innerHTML = `Player ${players[turn].num}'s turn: (${(players[turn].type || "Human").toUpperCase()}).<br>Invalid move: that stack is full.`;
+            statusDiv.innerHTML = `INVALID COMMAND: Stack full.<br>${getStatusHTML(turn)}`;
             return;
         }
 
@@ -480,7 +498,7 @@ function makeVectorChar(wasm, values) {
         });
     }
     if (players[turn].isBot) {
-        statusDiv.innerHTML += "<br>Thinking...";
+        updateTurnStatus(true);
         setTimeout(() => { botThink(); }, 0);
     }
 })();

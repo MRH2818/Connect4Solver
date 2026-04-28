@@ -256,9 +256,9 @@ class DrawBoard3D {
         this.controls.maxDistance = this.BOARD_SIZE * 5;
 
         this.controls.mouseButtons = {
-            LEFT: THREE.MOUSE.ROTATE,
-            MIDDLE: THREE.MOUSE.DOLLY,
             RIGHT: THREE.MOUSE.PAN,
+            MIDDLE: THREE.MOUSE.DOLLY,
+            LEFT: THREE.MOUSE.ROTATE,
         };
         this.controls.touches = {
             ONE: THREE.TOUCH.ROTATE,

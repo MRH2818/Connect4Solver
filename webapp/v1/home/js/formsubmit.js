@@ -18,7 +18,7 @@
             players.push({ num: idx+1, type: formData.get(key) });
         });
 
-        var boardSize = Number(formData.get("boardsize"));
+        var boardSize = Number(formData.get("board-size"));
         if (Number.isFinite(boardSize)) {
             boardSize = Math.min((numDimensions === 2) ? 10 : 7, Math.max(4, Math.round(boardSize)));
         }

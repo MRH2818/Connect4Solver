@@ -23,10 +23,18 @@
     </head>
     <body>
         <a class="back-button" href="../home/index.html">Home</a>
-        <h1>Welcome to the 3d game!</h1>
-        <button id="undoMoveButton" type="button">Undo Move</button>
-        <button id="nextMoveButton" type="button">Next Move</button>
+        <!-- <h1>Welcome to the 3d game!</h1> -->
+        <div id="game-scroll-buttons">
+            <button id="undoMoveButton" type="button">Undo Move</button>
+            <button id="nextMoveButton" type="button">Next Move</button>
+        </div>
         <canvas id="boardCanvas"></canvas>
         <div id="statusUpdate"></div>
+        <div id="controls-legend">
+            <p class="clicktoplace">Click to place!</p>
+            <p class="legend-item"><span>Left Click:</span> Drag</p>
+            <p class="legend-item"><span>Right Click:</span> Pan</p>
+            <p class="legend-item"><span>Scroll:</span> Zoom</p>
+        </div>
     </body>
 </html>

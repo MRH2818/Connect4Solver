@@ -44,7 +44,16 @@ function makeVectorChar(wasm, values) {
         STATUS UPDATE       ---------------------------------------
     */
     const statusDiv = document.getElementById("statusUpdate");
-    statusDiv.innerHTML = "Loading board...";    
+    statusDiv.innerHTML = "INITIALIZING BOARD...";    
+    statusDiv.innerHTML = "PREPARING GAME FIELD...";    
+
+    const getStatusHTML = (playerIdx, isThinking = false) => {
+        const p = players[playerIdx];
+        const typeLabel = "";//p.isBot ? "AI" : "HUMAN";
+        const action = isThinking ? "is calculating..." : "- WAITING FOR MOVE";
+        const prefix = p.isBot ? "[KORFBOT]" : "[USER]";
+        return `<small>${prefix}</small> <span style="color: ${playerColors[playerIdx]}; font-weight: bold; text-transform: uppercase;">Player ${p.num}</span>${typeLabel} ${action}`;
+    };
 
 
     /*
@@ -190,7 +199,16 @@ function makeVectorChar(wasm, values) {
         botWorker.onerror = (e) => {
             console.error("KorfBot worker crashed", e);
         };
+        
+        let dots = 0;
+        const loadingInterval = setInterval(() => {
+            dots = (dots + 1) % 4;
+            statusDiv.innerHTML = `AWAKENING KORFBOT AI${'.'.repeat(dots)}`;
+        }, 300);
+
         await botWorkerCall("reset", { boardSize: _BOARD_SIZE, numDimensions: 2, players: players.map(p => ({ num: p.num, type: p.type })), playerTokens, agentMaxDepth: AGENT_MAX_DEPTH, agentThoughtCapMs: AGENT_THOUGHT_CAP_MS, agentMinDepth: AGENT_MIN_DEPTH });
+        
+        clearInterval(loadingInterval);
     }
 
     // Finds where the next piece would land in a given column.
@@ -291,7 +309,7 @@ function makeVectorChar(wasm, values) {
 
         await rebuildBoardsFromHistory();
         gameOver = false;
-        statusDiv.innerHTML = `Player ${players[turn].num}'s turn: (${players[turn].type.toUpperCase()}).`;
+        statusDiv.innerHTML = getStatusHTML(turn);
 
         try {
             await rebuildWorkerState();
@@ -332,15 +350,15 @@ function makeVectorChar(wasm, values) {
         await finalizeMove(moveArr[0], turn);
 
         if (wasmBoard.checkWin(wasmChar(playerTokens[turn]))) {
-            statusDiv.innerHTML = `Player ${players[turn].num} wins!`;
+            statusDiv.innerHTML = `<span style="color: ${playerColors[turn]}; font-weight: bold; text-transform: uppercase;">Player ${players[turn].num} WINS!</span>`;
             gameOver = true;
         } else if (wasmBoard.isFull()) {
-            statusDiv.innerHTML = "Game is a draw!";
+            statusDiv.innerHTML = "<strong>STALEMATE - IT'S A DRAW!</strong>";
             gameOver = true;
         } else {
             gameOver = false;
             turn = (turn + 1) % players.length;
-            statusDiv.innerHTML = `Player ${players[turn].num}'s turn: (${players[turn].type.toUpperCase()}).`;
+            statusDiv.innerHTML = getStatusHTML(turn);
         }
 
         try {
@@ -403,22 +421,22 @@ function makeVectorChar(wasm, values) {
 
             // VERIFY MOVE
             if (wasmBoard.checkWin(wasmChar(playerTokens[turn]))) {
-                statusDiv.innerHTML = `Player ${players[turn].num} wins!`;
+                statusDiv.innerHTML = `<span style="color: ${playerColors[turn]}; font-weight: bold; text-transform: uppercase;">Player ${players[turn].num} WINS!</span>`;
                 gameOver = true;
             } else if (wasmBoard.isFull()) {
-                statusDiv.innerHTML = "Game is a draw!";
+                statusDiv.innerHTML = "<strong>STALEMATE - IT'S A DRAW!</strong>";
                 gameOver = true;
             }
 
             // DRAW MOVE
             await finalizeMove(col, turn);
             if (botWorker) {
-                try { await botWorkerCall("applyMove", { move: moveArr, token: playerTokens[turn] }); } catch (err) { console.error("Worker sync failed", err); }
+                try { await botWorkerCall("applyMove", { move: moveArr, token: playerTokens[turn] }); } catch (err) { console.error("AI sync failed", err); }
             }
 
             if (!gameOver) {
                 turn = (turn + 1) % players.length;
-                statusDiv.innerHTML = `Player ${players[turn].num}'s turn: (${players[turn].type.toUpperCase()}).`;
+                statusDiv.innerHTML = getStatusHTML(turn);
 
                 if (players[turn].isBot) {
                     statusDiv.innerHTML += "<br>Thinking...";
@@ -444,7 +462,7 @@ function makeVectorChar(wasm, values) {
             return;
         }
         if (players[turn].isBot) {
-            statusDiv.innerHTML = `Player ${players[turn].num}'s turn: (${players[turn].type.toUpperCase()}).<br>Wait! The bot is thinking!`;
+            statusDiv.innerHTML = `INPUT BLOCKED: ${getStatusHTML(turn, true)}`;
             return;
         }
 
@@ -454,15 +472,15 @@ function makeVectorChar(wasm, values) {
         const placed = wasmBoard.addDrop(vi, wasmChar(playerTokens[turn]));
         if (!placed) {
             vi.delete?.();
-            statusDiv.innerHTML = `Player ${players[turn].num}'s turn: (${players[turn].type.toUpperCase()}).<br>Invalid move! Please pick another column.`;
+            statusDiv.innerHTML = `INVALID COMMAND: Column full. Pick another.<br>${getStatusHTML(turn)}`;
             return;
         }
         // MAKE SURE THAT IT DRAWS AFTER WIN OR DRAW
         if (wasmBoard.checkWin(wasmChar(playerTokens[turn]))) {
-            statusDiv.innerHTML = `Player ${players[turn].num} wins!`;
+            statusDiv.innerHTML = `<span style="color: ${playerColors[turn]}; font-weight: bold; text-transform: uppercase;">Player ${players[turn].num} WINS!</span>`;
             gameOver = true;
         } else if (wasmBoard.isFull()) {
-            statusDiv.innerHTML = "Game is a draw!";
+            statusDiv.innerHTML = "<strong>STALEMATE - IT'S A DRAW!</strong>";
             gameOver = true;
         }
 
@@ -483,7 +501,7 @@ function makeVectorChar(wasm, values) {
 
         if (!gameOver) {
             turn = (turn + 1) % players.length;
-            statusDiv.innerHTML = `Player ${players[turn].num}'s turn: (${players[turn].type.toUpperCase()}).`;
+            statusDiv.innerHTML = getStatusHTML(turn);
 
             if (players[turn].isBot) {
                 statusDiv.innerHTML += "<br>Thinking...";
@@ -494,10 +512,10 @@ function makeVectorChar(wasm, values) {
     }
 
     // TRIGGER GAME NOW
-    statusDiv.innerHTML = `Player ${players[turn].num}'s turn: (${players[turn].type.toUpperCase()}).`;
+    statusDiv.innerHTML = getStatusHTML(turn);
 
     if (players[turn].isBot) {
-        statusDiv.innerHTML += "<br>Thinking...";
+        statusDiv.innerHTML = getStatusHTML(turn, true);
         setTimeout(() => { botThink(); }, 0);
     }
     syncActionButtons();

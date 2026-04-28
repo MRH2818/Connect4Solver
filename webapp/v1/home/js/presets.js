@@ -14,10 +14,19 @@ function applyPreset(config) {
     }
 
     const boardSizeInput = document.getElementById("board-size");
-    if (boardSizeInput) boardSizeInput.value = config.boardSize;
+    if (boardSizeInput) {
+        boardSizeInput.value = config.boardSize;
+        var steppers = document.querySelectorAll(".stepper[data-stepper-for]");
+        steppers.forEach(function (stepper) {
+            var id = stepper.getAttribute("data-stepper-for");
+            if (!id) return;
 
-    const randomizePlayerOrderCheckbox = document.getElementById("randomizePlayerOrder");
-    if (randomizePlayerOrderCheckbox) randomizePlayerOrderCheckbox.checked = config.randomizePlayerOrder || false;
+            var input = document.getElementById(id);
+            if (!input || !(input instanceof HTMLInputElement)) return;
+
+            capBoardSizeMax(input);
+        });
+    }
 
     // Set agent settings (if applicable)
     const agentMaxDepthInput = document.getElementById("agentMaxDepth");
