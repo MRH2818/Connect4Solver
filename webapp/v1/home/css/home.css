@@ -6,6 +6,7 @@
     --panel: #0f1a2e;
     --panel2: #0c1629;
     --text: #e7eefc;
+    --text-rgb: 231, 238, 252; /* RGB values for --text */
     --muted: #a9b7d6;
     --border: rgba(231, 238, 252, 0.14);
     --border2: rgba(231, 238, 252, 0.22);
@@ -13,6 +14,7 @@
     --danger: #ff6b6b;
     --shadow: 0 18px 48px rgba(0, 0, 0, 0.45);
     --radius: 14px;
+    --focus-rgb: 122, 167, 255; /* RGB values for --focus */
     --radius-sm: 10px;
     --pad: 16px;
     --gap: 12px;
@@ -21,7 +23,6 @@
 }
 
 * { box-sizing: border-box; }
-/* html, body { height: 100%; } */
 
 body {
     margin: 0;
@@ -132,7 +133,7 @@ select {
     background-repeat: no-repeat;
     background-position: right 12px center;
     background-size: 16px 16px;
-    /* Inline SVG chevron (no gradients). */
+    /* Inline SVG chevron (no gradients) */
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='rgba(231,238,252,0.9)' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
@@ -157,7 +158,7 @@ select:focus, input[type="number"]:focus {
 }
 
 /* Dimensions radio group */
-form#game-setup-form > div {
+form#game-setup-form > div, #custom-settings > div, div.toggle:not(form#game-setup-form > div#custom-settings) {
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     padding: var(--pad);
@@ -166,7 +167,7 @@ form#game-setup-form > div {
     gap: 10px;
 }
 
-form#game-setup-form > div.toggle > div {
+div.toggle > div {
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
@@ -236,20 +237,25 @@ button:focus-visible {
 }
 
 button[type="submit"] {
-    border-color: rgba(122, 167, 255, 0.65);
-    background: rgba(122, 167, 255, 0.08);
+    border-color: rgba(122, 255, 140, 0.682);
+    background: rgba(122, 167, 255, 0.12);
+    font-weight: 700;
+    display: block;
+    margin: 0 auto;
+    width: 40%;
+    /* width: fit-content; */
 }
 
-button[type="submit"]:hover { background: rgba(122, 167, 255, 0.12); }
+button[type="submit"]:hover {
+    background: rgba(66, 255, 116, 0.221);
+}
 
 /* Remove player buttons (only inside player tiles) */
 .playertile > button[type="button"] {
-    /* width: fit-content; */
     padding: 6px 8px;
     font-family: var(--mono);
     font-size: 12px;
     border-radius: 8px;
-
     width: 48%;
     border-color: rgba(255, 107, 107, 0.55);
     background: rgba(255, 107, 107, 0.10);
@@ -263,9 +269,63 @@ button[type="submit"]:hover { background: rgba(122, 167, 255, 0.12); }
     border-color: rgba(255, 107, 107, 0.78);
 }
 
+/* Toggle Custom Settings Button */
+#toggle-custom-btn { /* Darker than --panel, same as player tiles */
+    background: var(--panel2);
+    border-color: var(--border2); /* Slightly stronger border */
+    font-weight: 600;
+    color: var(--text);
+}
+#toggle-custom-btn:hover {
+    background: rgba(var(--text-rgb), 0.08); /* More pronounced hover */
+    border-color: var(--focus);
+}
+#toggle-custom-btn:focus-visible {
+    box-shadow: 0 0 0 4px rgba(var(--focus-rgb), 0.18);
+    border-color: var(--focus);
+}
+
+.add-player-button { /* Greenish tint, similar to stepper-up buttons */
+    border-color: rgba(80, 200, 120, 0.55);
+    background: rgba(80, 200, 120, 0.10);
+    color: rgba(210, 255, 230, 0.98);
+    /* display: block;
+    margin: 0 auto;
+    width: fit-content; */
+}
+.add-player-button:hover {
+    background: rgba(80, 200, 120, 0.14);
+    border-color: rgba(80, 200, 120, 0.78);
+}
+.add-player-button:focus-visible {
+    box-shadow: 0 0 0 4px rgba(80, 200, 120, 0.18);
+    border-color: rgba(80, 200, 120, 0.9);
+}
+
 /* Label + number input block */
 label[for="board-size"] { display: block; }
 #board-size { margin: 0; }
+
+/* Preset buttons styling */
+#preset-buttons {
+    margin-top: var(--pad); /* Add some space above the button bar */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.preset-button {
+    /* Inherits most styles from the general button rule */
+    font-size: 14px;
+}
+
+.preset-button.active {
+    border-color: var(--focus);
+    /* background: rgba(var(--focus-rgb), 0.12); */
+    box-shadow: 0 0 0 2px rgba(var(--focus-rgb), 0.1);
+}
 
 .stepper {
     display: grid;
@@ -326,4 +386,3 @@ label[for="board-size"] { display: block; }
 @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
 }
-
