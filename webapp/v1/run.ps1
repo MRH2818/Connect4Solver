@@ -5,7 +5,7 @@ param(
     [int]$p = 8000
 )
 Write-Host "Main at:"
-Write-Host "http://localhost:$p/home/index.html"
+Write-Host "http://localhost:$p/index.html"
 
 python -m http.server $p
 
