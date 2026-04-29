@@ -54,12 +54,12 @@
         // CHECK DIMENSIONS
         if (setup.numDimensions === 2) {
             // BUILD REDIRECT
-            const newurl = `../2dgame/twogame.html?config=${binstr}`;
+            const newurl = `2dgame/twogame.html?config=${binstr}`;
             window.location.href = newurl;
             return setup;
         } else if (setup.numDimensions === 3) {
             // BUILD REDIRECT
-            const newurl = `../3dgame/threegame.html?config=${binstr}`;
+            const newurl = `3dgame/threegame.html?config=${binstr}`;
             window.location.href = newurl;
             return setup;
         }
