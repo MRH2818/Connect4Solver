@@ -386,3 +386,19 @@ label[for="board-size"] { display: block; }
 @media (prefers-reduced-motion: reduce) {
     * { transition: none !important; }
 }
+
+/* Mobile-specific adjustments */
+@media (max-width: 480px) {
+    button[type="submit"],
+    .add-player-button {
+        width: 100%;
+        padding: 14px; /* Larger tap target */
+    }
+
+    .player-color-setting,
+    .playertile > button[type="button"] {
+        width: 100%; /* Stack elements inside player tiles on very narrow screens */
+    }
+
+    h1 { text-align: center; }
+}
