@@ -193,7 +193,7 @@ function makeVectorChar(wasm, values) {
     const getStatusHTML = (playerIdx, isThinking = false) => {
         const p = players[playerIdx];
         const typeLabel = "";//p.isBot ? "AI" : "HUMAN";
-        const action = isThinking ? "is calculating..." : "- WAITING FOR MOVE";
+        const action = isThinking ? "is calculating..." : "WAITING FOR MOVE";
         const prefix = p.isBot ? "[KORFBOT]" : "[USER]";
         return `<small>${prefix}</small> <span style="color: ${playerColors[playerIdx]}; font-weight: bold; text-transform: uppercase;">Player ${p.num}</span>${typeLabel} ${action}`;
     };
@@ -500,5 +500,27 @@ function makeVectorChar(wasm, values) {
     if (players[turn].isBot) {
         updateTurnStatus(true);
         setTimeout(() => { botThink(); }, 0);
+    }
+
+    // MOBILE FRIENDLY ENHANCEMENTS
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (isTouchDevice) {
+        // Update instructions for touch interaction
+        const clickToPlace = document.querySelector(".clicktoplace");
+        if (clickToPlace) clickToPlace.textContent = "Tap to place!";
+
+        const legendItems = document.querySelectorAll(".legend-item");
+        if (legendItems.length >= 3) {
+            legendItems[0].innerHTML = "<span>1 Finger:</span> Rotate";
+            legendItems[1].innerHTML = "<span>2 Fingers:</span> Pan";
+            legendItems[2].innerHTML = "<span>Pinch:</span> Zoom";
+        }
+
+        // Disable browser-level touch gestures (scroll/zoom) on the canvas
+        // to allow smooth Three.js OrbitControls and game interaction.
+        const canvas = document.getElementById("boardCanvas");
+        if (canvas) {
+            canvas.style.touchAction = "none";
+        }
     }
 })();

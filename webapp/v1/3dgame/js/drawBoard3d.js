@@ -30,6 +30,7 @@ class DrawBoard3D {
         this.canvas = document.getElementById("boardCanvas");
         this.canvas.style.borderRadius = boardCornerRadius;
         this.canvas.style.backgroundColor = "#0b0f1a";
+        this.canvas.style.touchAction = "none";
 
         this.renderer = new THREE.WebGLRenderer({
             canvas: this.canvas,
@@ -106,9 +107,8 @@ class DrawBoard3D {
         const maxMovePx = 8;
 
         this.canvas.addEventListener("pointerdown", (e) => {
-            if (e.button !== 0) {
-                return;
-            }
+            // Accept primary button (left click) or touch interaction
+            if (e.button !== 0 && e.pointerType !== 'touch') return;
             this._clickPointerDown = { x: e.clientX, y: e.clientY };
         });
 
@@ -116,22 +116,24 @@ class DrawBoard3D {
             this._clickPointerDown = null;
         });
 
-        this.canvas.addEventListener("click", (e) => {
-            if (e.button !== 0) {
-                return;
-            }
+        this.canvas.addEventListener("pointerup", (e) => {
+            if (e.button !== 0 && e.pointerType !== 'touch') return;
+
             const start = this._clickPointerDown;
             this._clickPointerDown = null;
-            if (!start) {
-                return;
-            }
+            if (!start) return;
+
             const dx = e.clientX - start.x;
             const dy = e.clientY - start.y;
-            if (dx * dx + dy * dy > maxMovePx * maxMovePx) {
+            
+            // Use a slightly more forgiving threshold for mobile taps
+            const threshold = e.pointerType === 'touch' ? 8 : maxMovePx;
+            if (dx * dx + dy * dy > threshold * threshold) {
                 return;
             }
 
-            const hoverResult = this._hoverTarget ?? this.getDropCoordinatesFromEvent(e);
+            // Recalculate hit coordinates specifically for this tap event.
+            const hoverResult = this.getDropCoordinatesFromEvent(e);
             const dropCoords = this._extractDropCoords(hoverResult);
             onClick({ ...e, dropCoords });
         });

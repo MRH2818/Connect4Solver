@@ -140,3 +140,20 @@ h1 {
     text-align: left;
     float: left;
 }
+
+/* Mobile-specific adjustments */
+@media (max-width: 520px) {
+    #game-scroll-buttons {
+        flex-direction: column;
+        align-items: center;
+        justify-items: center;
+        gap: 12px;
+    }
+    #controls-legend p, #controls-legend span {
+        font-size: 12px !important;
+    }
+    #statusUpdate {
+        font-size: 15px !important;
+        width: 40% !important;
+    }
+}

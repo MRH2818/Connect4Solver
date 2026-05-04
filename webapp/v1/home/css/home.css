@@ -388,7 +388,7 @@ label[for="board-size"] { display: block; }
 }
 
 /* Mobile-specific adjustments */
-@media (max-width: 480px) {
+@media (max-width: 520px) {
     button[type="submit"],
     .add-player-button {
         width: 100%;
