@@ -42,7 +42,13 @@ class DrawBoard3D {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x091021);
 
-        this.camera = new THREE.PerspectiveCamera(46, 1, 0.1, 1000);
+        const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        if (isMobile) {
+            this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
+        } else {
+            this.camera = new THREE.PerspectiveCamera(46, 1, 0.1, 1000);
+        }
+
         this.camera.position.set(this.BOARD_SIZE * 1.2, this.BOARD_SIZE * 1.15, this.BOARD_SIZE * 1.35);
         this.camera.lookAt(0, this.BOARD_SIZE * 0.45, 0);
 
@@ -96,7 +102,18 @@ class DrawBoard3D {
         }
 
         this.renderer.setSize(w, h, false);
-        this.camera.aspect = w / h;
+
+        const aspect = w / h;
+        if (this.camera.isOrthographicCamera) {
+            const frustumSize = this.BOARD_SIZE * 2.0;
+            this.camera.left = -frustumSize * aspect / 2;
+            this.camera.right = frustumSize * aspect / 2;
+            this.camera.top = frustumSize / 2;
+            this.camera.bottom = -frustumSize / 2;
+        } else {
+            this.camera.aspect = aspect;
+        }
+
         this.camera.updateProjectionMatrix();
         this.render();
     }
@@ -253,6 +270,8 @@ class DrawBoard3D {
         this.controls.screenSpacePanning = true;
         this.controls.minZoom = this.BOARD_SIZE * 1;
         this.controls.maxZoom = this.BOARD_SIZE * 3;
+        this.controls.minZoom = 0.5;
+        this.controls.maxZoom = 4.0;
 
         this.controls.minDistance = this.BOARD_SIZE;
         this.controls.maxDistance = this.BOARD_SIZE * 5;

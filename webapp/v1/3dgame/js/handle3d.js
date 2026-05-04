@@ -266,7 +266,15 @@ function makeVectorChar(wasm, values) {
                 }
                 replayForwardMoves.push(removed);
                 visualBoard.removeDrop(removed.x, removed.y, removed.z);
-                turn = (turn - 1 + players.length) % players.length;
+                if (gameOver) {
+                    // turn = (turn + 1) % players.length;
+                    removedTargetMove = true;
+                    updateTurnStatus();
+                    break;
+                }
+                else {
+                    turn = (turn - 1 + players.length) % players.length;
+                }
                 if (!hasAnyHumanPlayer || !players[removed.playerIndex].isBot) {
                     removedTargetMove = true;
                 }
