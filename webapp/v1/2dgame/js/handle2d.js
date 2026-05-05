@@ -73,7 +73,7 @@ function makeVectorChar(wasm, values) {
     let AGENT_MIN_DEPTH = 0;
 
     // Board UI look:
-    const PIXEL_SIDE_LENGTH = 600;
+    const PIXEL_SIDE_LENGTH = 380;
 
     if (!configParam) {
         console.warn('handle2d: no `config` query parameter');
@@ -455,7 +455,7 @@ function makeVectorChar(wasm, values) {
                 statusDiv.innerHTML = getStatusHTML(turn);
 
                 if (players[turn].isBot) {
-                    statusDiv.innerHTML += "<br>Thinking...";
+                    // statusDiv.innerHTML += "<br>Thinking...";
                     setTimeout(() => { botThink(); }, 0);
                 }
             }
@@ -482,7 +482,7 @@ function makeVectorChar(wasm, values) {
             return;
         }
 
-        const col = Math.floor(e.offsetX / (PIXEL_SIDE_LENGTH / _BOARD_SIZE));
+        const col = visualBoard.getColumnFromOffsetX(e.offsetX);
 
         const vi = makeVectorInt(wasm, [col]);
         const placed = wasmBoard.addDrop(vi, wasmChar(playerTokens[turn]));
@@ -520,7 +520,7 @@ function makeVectorChar(wasm, values) {
             statusDiv.innerHTML = getStatusHTML(turn);
 
             if (players[turn].isBot) {
-                statusDiv.innerHTML += "<br>Thinking...";
+                // statusDiv.innerHTML += "<br>Thinking...";
                 setTimeout(() => { botThink(); }, 0);
             }
         }
@@ -583,5 +583,10 @@ function makeVectorChar(wasm, values) {
         visualBoard.clearHoverPreview();
     });
 
-
+    // MOBILE FRIENDLY ENHANCEMENTS
+    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (isTouchDevice) {
+        const clickToPlace = document.querySelector(".clicktoplace");
+        if (clickToPlace) clickToPlace.textContent = "Tap to place!";
+    }
 })();

@@ -42,8 +42,8 @@ class DrawBoard3D {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x091021);
 
-        const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
-        if (isMobile) {
+        this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        if (this.isMobile) {
             this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
         } else {
             this.camera = new THREE.PerspectiveCamera(46, 1, 0.1, 1000);
@@ -268,10 +268,13 @@ class DrawBoard3D {
         this.controls.zoomSpeed = 3;
         this.controls.target.set(0, this.BOARD_SIZE * 0.45, 0);
         this.controls.screenSpacePanning = true;
-        this.controls.minZoom = this.BOARD_SIZE * 1;
-        this.controls.maxZoom = this.BOARD_SIZE * 3;
-        this.controls.minZoom = 0.5;
-        this.controls.maxZoom = 4.0;
+        if (this.isMobile) {
+            this.controls.minZoom = 0.5;
+            this.controls.maxZoom = 4.0;
+        } else {
+            this.controls.minZoom = this.BOARD_SIZE * 1;
+            this.controls.maxZoom = this.BOARD_SIZE * 3;
+        }
 
         this.controls.minDistance = this.BOARD_SIZE;
         this.controls.maxDistance = this.BOARD_SIZE * 5;

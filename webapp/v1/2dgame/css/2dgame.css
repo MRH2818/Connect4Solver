@@ -2,15 +2,18 @@ body {
     margin: 0;
     min-height: 100vh;
     display: flex;
-    align-items: center;
+    align-items: first baseline;
     justify-content: center;
     font-family: "Trebuchet MS", "Segoe UI", Arial, sans-serif;
     color: #e7eefc;
     background: #0b1220;
+
+    /* overflow-y: hidden; */
 }
 
 .page-shell {
     width: min(95vw, 920px);
+    margin-top: 15px;
     padding: 0 28px 24px;
     border: 1px solid rgba(231, 238, 252, 0.14);
     border-radius: 16px;
@@ -161,16 +164,33 @@ body {
 }
 
 @media (max-width: 640px) {
+    body {
+        align-items: center;
+    }
     .page-shell {
         padding: 16px 14px 18px;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        height: fit-content;
     }
 
     .back-button {
-        align-self: center;
-        margin-bottom: 14px;
+        position: absolute;
+        font-size: 10px;
+        top: 5px;
+        left: 5px;
+        width: fit-content;
+        /* display: block;
+        position: static;
+        width: fit-content;
+        margin: 0 auto 16px; */
     }
 
     .board-frame {
         padding: 10px;
+    }
+
+    #statusUpdate {
+        font-size: 15px;
     }
 }

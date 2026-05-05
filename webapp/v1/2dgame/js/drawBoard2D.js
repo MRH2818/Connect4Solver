@@ -12,6 +12,7 @@ class DrawBoard2D {
         this.canvas.height = pixelSideLength;
         this.canvas.style.backgroundColor = "transparent";
         this.canvas.style.borderRadius = boardCornerRadius;
+        this.canvas.style.touchAction = "none";
 
         this.ctx = this.canvas.getContext('2d');
         this.BOARD_SIZE = boardSize; // board size n (number of circles width/tall)
@@ -28,7 +29,7 @@ class DrawBoard2D {
     
     // Sets click handler that maps canvas clicks to board columns.
     setOnClickHandler(onClick = (e) => {
-        const col = Math.floor(e.offsetX / (PIXEL_SIDE_LENGTH / _BOARD_SIZE));
+        const col = this.getColumnFromOffsetX(e.offsetX);
         console.log(`Registered click at column ${col}.`);
     }) {
         this.canvas.addEventListener("click", onClick);
@@ -224,7 +225,8 @@ class DrawBoard2D {
 
     // Maps canvas x-offset to the board column index.
     getColumnFromOffsetX(offsetX) {
-        return Math.floor(offsetX / this.cellSize);
+        const rect = this.canvas.getBoundingClientRect();
+        return Math.floor((offsetX / rect.width) * this.BOARD_SIZE);
     }
 
     // Updates hover preview for a given column, row, and color.
@@ -347,5 +349,3 @@ class DrawBoard2D {
     }
 
 }
-
-
