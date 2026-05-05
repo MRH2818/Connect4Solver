@@ -33,7 +33,7 @@ function makeVectorInt(wasm, values) {
     return vec;
 }
 function makeVectorChar(wasm, values) {
-    const vec = new wasm.VectorChar();
+    const vec = new wasmVectorChar();
     values.forEach((v) => vec.push_back(wasmChar(v)));
     return vec;
 }
@@ -154,7 +154,7 @@ function makeVectorChar(wasm, values) {
         if (nextMoveButton) {
             nextMoveButton.disabled = (
                 isAnimatingDrop ||
-                isBotThinking ||
+                // isBotThinking ||
                 replayForwardMoves.length === 0
             );
         }
@@ -293,11 +293,27 @@ function makeVectorChar(wasm, values) {
             const undoneMove = lastMoves.pop();
             undoneMove?.delete?.();
             const removedEntry = moveHistory.pop();
-            turn = (turn - 1 + players.length) % players.length;
+            if (gameOver) {
+                // turn = (turn - 1) % players.length;
+                removedTargetMove = true;
+                gameOver = true;
+                statusDiv.innerHTML = getStatusHTML(turn);
+                syncActionButtons();
+
+                if (removedEntry) {
+                    replayForwardMoves.push(removedEntry);
+                }
+                break;
+            }
+            else {
+                turn = (turn - 1 + players.length) % players.length;
+            }
             if (!removedEntry) {
                 break;
             }
+            
             replayForwardMoves.push(removedEntry);
+
             if (!hasAnyHumanPlayer || !players[removedEntry.playerIndex].isBot) {
                 removedTargetMove = true;
             }
