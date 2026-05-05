@@ -8,7 +8,7 @@ body {
     color: #e7eefc;
     background: #0b1220;
 
-    /* overflow-y: hidden; */
+    overflow-x: hidden;
 }
 
 .page-shell {
