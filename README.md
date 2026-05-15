@@ -8,6 +8,8 @@ A header-only C++ playground for gravity-driven Connect Four variants, including
 - **CLI 3D play**: a two-player 7x7x7 variant where pieces still fall along a gravity axis.
 - **Webapp**: GUI implementation of generalized 2d+3d game. Allows for multiplayer and 2d or 3d game, and bot parameter tuning.
 
+Demo the **Webapp** here: *https://mrh2818.github.io/Connect4Solver/webapp/v1/*
+
 ## Agent architecture
 
 `include/agent.hpp` abstract `Agent` interface focused on `chooseMove` function. The command-line apps create a concrete agent and pass in the latest opponent move data when needed.
