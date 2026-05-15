@@ -12,7 +12,7 @@ Demo the **Webapp** here: *https://mrh2818.github.io/Connect4Solver/webapp/v1/*
 
 ## Agent architecture
 
-`include/agent.hpp` abstract `Agent` interface focused on `chooseMove` function. The command-line apps create a concrete agent and pass in the latest opponent move data when needed.
+`include/agent.hpp` abstract `Agent` interface focused on `chooseMove` function. The CLI apps create a concrete agent and pass in the latest opponent move data when needed.
 
 - `src/agents/randagent.hpp`: samples uniformly from `Board::getAvailableMoves`.
 - `src/agents/maxnagent.hpp`: runs a recursive MaxN-style search
@@ -22,7 +22,7 @@ Demo the **Webapp** here: *https://mrh2818.github.io/Connect4Solver/webapp/v1/*
 
 ## Webapp Requirements
 
-- Browser capable of loading and running web assembly
+- Browser with WebAssembly support.
 
 ## Building with Emscripten
 
