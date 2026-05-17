@@ -42,7 +42,7 @@ class DrawBoard3D {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0x091021);
 
-        this.isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+        this.isMobile = 'ontouchstart' in window || window?.matchMedia("(pointer: coarse)").matches;
         if (this.isMobile) {
             this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 1000);
         } else {
