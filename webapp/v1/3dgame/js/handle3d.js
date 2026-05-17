@@ -511,7 +511,7 @@ function makeVectorChar(wasm, values) {
     }
 
     // MOBILE FRIENDLY ENHANCEMENTS
-    const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    const isTouchDevice = 'ontouchstart' in window || window?.matchMedia("(pointer: coarse)").matches;
     if (isTouchDevice) {
         // Update instructions for touch interaction
         const clickToPlace = document.querySelector(".clicktoplace");
